@@ -6,7 +6,7 @@ Authors@R:
            family = "Sankaran",
            role = c("aut", "cre"),
            email = "ksankaran@wisc.edu",
-           comment = c(ORCID = "https://orcid.org/0000-0002-9415-1971")
+           comment = c("ORCID" = "https://orcid.org/0000-0002-9415-1971"))
 Description: A package for the targeted proteomics problem at BIRS 2020.
 License: MIT + file LICENSE
 Encoding: UTF-8
