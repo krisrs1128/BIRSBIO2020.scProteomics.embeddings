@@ -1,5 +1,11 @@
 ---
-title: Features from MIBI Segmentations
+title: "Features from MIBI Segmentations"
+author: Kris Sankaran^[ksankaran@wisc.edu]
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Features from MIBI Segmentations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 params:
   sample_id: 5
 ---
@@ -25,6 +31,7 @@ library("igraph")
 library("raster")
 library("readr")
 library("reshape2")
+library("sf")
 library("spdep")
 library("stars")
 library("stringr")
@@ -32,15 +39,16 @@ library("BIRSBIO2020.scProteomics.embeddings")
 theme_set(theme_bw() + theme(panel.grid=element_blank()))
 ```
 
+First, we'll download all the data, if they're not already present in the
+`$HOME/Data` folder.
+
 ```{r}
-sample_id <- params$sample_id
-
 # if data folder doesn't exist, download and unzip
-
-data_dir <- file.path("..", "Data", "TNBC_shareCellData")
-f <- list.files(data_dir, str_interp("p${sample_id}_"), full.names = TRUE)
+data_paths <- download_data(file.path(Sys.getenv("HOME"), "Data"))
+sample_id <- params$sample_id
+f <- list.files(data_paths[[3]], str_interp("p${sample_id}_"), full.names = TRUE)
 im <- raster(f)
-## im <- crop(im, extent(im, 0, 250, 0, 250)) # uncomment to test on cropped data
+im <- crop(im, extent(im, 0, 250, 0, 250)) # comment out to run on full data
 ```
 
 # Polygonization
@@ -60,19 +68,21 @@ This will join polygons that are neighbors. Notice that there is a thin border
 between cells, so we'll ignore that using the `snap` argument in `poly2nb`.
 
 ```{r}
-cell_data <- read_csv(file.path(data_dir, "cellData.csv")) %>%
+cell_data <- read_csv(file.path(data_paths[[3]], "cellData.csv")) %>%
   filter(SampleID == sample_id)
 
 polys <- polys %>%
   inner_join(cell_data) %>%
   group_by(cellLabelInImage) %>% # some regions get split into two adjacent polys --> merge
-  summarise_all(first)
+  inner_join(cell_data) %>%
+  group_by(cellLabelInImage) %>%
+  summarise_all(function(x) { x[1] })
 ```
 
 With these shapefiles, we can use geographic plotting tools. For example, this
 plots the immune group for each geometry.
 
-```{r fig.width=14, fig.height=14}
+```{r}
 ggplot(polys) +
   geom_sf(aes(fill=as.factor(immuneGroup))) +
   scale_x_continuous(expand = c(0, 0)) +
@@ -87,7 +97,7 @@ their connectivity / mixing structure. In the plot below, nodes are located at
 the original cell positions, and contiguity and knn edges are blue and red,
 respectively.
 
-```{r, fig.width=14, fig.height=14}
+```{r}
 nb_contig <- poly2nb(polys, snap=1)
 coords <- polys %>%
   .[["geometry"]] %>%
@@ -95,7 +105,7 @@ coords <- polys %>%
   st_coordinates()
 
 nb_knn <- knn2nb(knearneigh(coords, k = 5))
-plot(polys$geometry[1:nrow(polys)])
+plot(polys$geometry[seq_len(nrow(polys))])
 plot(nb_knn, coords, add=T, col="#476a79")
 plot(nb_contig, coords, add=T, col="#97293f")
 ```
@@ -104,7 +114,7 @@ We can turn this into a more familiar `igraph` object, for access to the usual
 graph manipulation routines.
 
 ```{r}
-G <- extract_graph(polys$cellLabelInImage, polys$geometry)
+G <- extract_graph(polys)
 plot(G, vertex.size=3, edge.arrow.size=0, vertex.label=NA)
 ```
 
@@ -116,19 +126,20 @@ let's look at features defined on windows centered around individual cells.
 The function below applys `fun` to the buffered window around the cell with
 label `cell_id`. For example, we can use it to get the proportion of each type
 of immune group within a window around that cell. This can be used to define a
-localized cell heterogeneity, for use in downstream analysis.
+localized cell heterogeneity, for use in downstream analysis. We plot each of
+the image subwindows surrounding a single cell.
 
 ```{r}
 #' How dense are cells, relative to background?
 cell_ids <- unique(polys$cellLabelInImage)
-loop_stats(cell_ids[1:10], "raster", im, polys, backgroundProp, plot_masks=FALSE)
+loop_stats(cell_ids[1:10], "raster", im, polys, background_prop)
 ```
 
 # Neighbor Features
 
-Next, we ignore the spatial information entirely, and summarize cells according
-to the properties of their neighbors.
+Alternatively, we could ignore the spatial information entirely, and summarize
+cells according to the properties of their neighbors.
 
 ```{r}
-loop_stats(cell_ids[1:10], "graph", G, polys, backgroundProp, plot_masks=FALSE)
+loop_stats(cell_ids[1:10], "graph", G, polys, background_prop)
 ```

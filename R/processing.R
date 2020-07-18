@@ -24,6 +24,37 @@ subsample_experiments <- function(x_list, p_keep = 0.05) {
   x_list
 }
 
+#' Download Data for Experiments
+#'
+#' Attempts to download data to directory if it's not already found.
+#' @param directory Directory to which all the data is downloaded.
+#' @export
+download_data <- function(directory) {
+  dir.create(directory, recursive = TRUE)
+  data_paths <- list(
+    file.path(directory, "mibiSCE.rda"),
+    file.path(directory, "masstagSCE.rda"),
+    file.path(directory, "TNBC_shareCellData")
+  )
+
+  if (!file.exists(data_paths[[1]])) {
+    download.file("https://drive.google.com/uc?export=download&id=1cY0KTVVFwI_bwXgCC8tddtB4Rb7dufQJ", data_paths[[1]])
+  }
+
+  if (!file.exists(data_paths[[2]])) {
+    download.file("https://drive.google.com/uc?export=download&id=1jNZiDUEIvdOkLsKBQoo0B5zzWTaObpLm", data_paths[[2]])
+  }
+
+  if (!file.exists(data_paths[[3]])) {
+    zip_path <- file.path(directory, "tnbc.zip")
+    download.file("https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip", zip_path)
+    dir.create(data_paths[[3]])
+    unzip(zip_path, exdir = data_paths[[3]])
+  }
+
+  data_paths
+}
+
 data_list <- function(pattern) {
   global <- ls(envir = .GlobalEnv)
   cell_types <- global[grep(pattern, global)]
@@ -45,13 +76,17 @@ polygonize <- function(im) {
     dplyr::select(-n_polys)
 }
 
+#' Proportion of image that's Background
+#'
+#' This is an example of a function that can be called in `loop_stats`.
+#' @export
 background_prop <- function(x, ...) {
   if (nrow(x) == 0) { # case of no neighbors
     return (tibble(immuneGroup = NA, props = NA))
   }
 
   props <- table(x$cellLabelInImage %in% c(0, 1))
-  tibble(background = names(props), props = props / sum(props))
+  tibble(background = names(props), props = as.numeric(props / sum(props)))
 }
 
 type_props <- function(x, ...) {
@@ -90,17 +125,24 @@ cell_type <- function(exper) {
 graph_stats_cell <- function(cell_id, G, polys, fun, ...) {
   ball <- igraph::neighbors(G, as.character(cell_id))
   cell_stats <- polys %>%
-    filter(cellLabelInImage %in% names(ball)) %>%
-    group_map(fun)
+    dplyr::filter(cellLabelInImage %in% names(ball)) %>%
+    dplyr:::group_map(fun)
 
   cell_stats[[1]] %>%
     dplyr::mutate(cellLabelInImage = cell_id) %>%
     dplyr::select(cellLabelInImage, everything())
 }
 
+#' Extract a KNN Graph from Polygons
+#'
+#' Sometimes we want to put neighboring polygons into one big graph.
+#' @param geometries The data.frame containing the polygons and their labels.
+#' @param K The number of nearest neighbors to which each polygon will be
+#'   linked.
+#' @export
 extract_graph <- function(geometries, K = 5) {
   nb <- spdep::knn2nb(
-    spdep::knearneigh(sf::st_centroid(geometries[seq_along(geometries), ]), K)
+    spdep::knearneigh(sf::st_centroid(geometries), K)
   )
   labels <- unique(geometries$cellLabelInImage)
   dists <- sapply(geometries$geometry, sf::st_centroid) %>%
@@ -141,31 +183,34 @@ extract_graph <- function(geometries, K = 5) {
 raster_stats_cell <- function(cell_id, im, polys, fun, buffer_radius=90,
                               plot_masks=TRUE) {
   sub_poly <- polys %>%
-    filter(cellLabelInImage == cell_id) %>%
-    .[["geometry"]] %>%
+    dplyr::filter(cellLabelInImage == cell_id) %>%
+    dplyr::select(geometry) %>%
     sf::st_centroid() %>%
     sf::st_buffer(dist = buffer_radius)
 
-  im_ <- mask(im, as_Spatial(sub_poly))
+  im_ <- raster::mask(im, sf::as_Spatial(sub_poly))
   if (plot_masks) {
-    plot(im_)
+    sp::plot(im_)
   }
 
-  melted_im <- as.matrix(im_) %>%
-    melt(na.rm = TRUE, value.name = "cellLabelInImage") %>%
-    left_join(polys, by = "cellLabelInImage") %>%
-    group_map(fun)
+  melted_im <- raster::as.matrix(im_) %>%
+    reshape2::melt(na.rm = TRUE, value.name = "cellLabelInImage") %>%
+    dplyr::left_join(polys, by = "cellLabelInImage") %>%
+    dplyr::group_map(fun)
 
   melted_im[[1]] %>%
-    mutate(cellLabelInImage = cell_id) %>%
-    dplyr::select(cellLabelInImage, everything())
+    dplyr::mutate(cellLabelInImage = cell_id) %>%
+    dplyr::select(cellLabelInImage, dplyr::everything())
 }
 
 #' Wrapper for Local Statistics
 #'
+#' Loop functions that can be applied on a cell by cell basis.
+#'
 #' @param cell_ids A vector of cell IDs on which to apply a function to
 #' @param type Either "raster" or "graph". Specifies the types of neighborhoods
 #'   (image or graph) on which to compute statistics.
+#' @export
 loop_stats <- function(cell_ids, type="raster", ...) {
   cell_fun <- ifelse(type == "raster", raster_stats_cell, graph_stats_cell)
 
@@ -174,7 +219,7 @@ loop_stats <- function(cell_ids, type="raster", ...) {
     result[[i]] <- cell_fun(cell_ids[i], ...)
   }
 
-  bind_rows(result)
+  dplyr::bind_rows(result)
 }
 
 generate_model <- function(n_ft) {
