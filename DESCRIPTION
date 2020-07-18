@@ -12,13 +12,11 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.0
-Depends: 
-    Biobase
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,
     pkgdown
-URL: https://krisrs1128.github.io/BuildABiocWorkshop2020/
+URL: https://krisrs1128.github.io/BIRSBIO2020.scProteomics.embeddings
 VignetteBuilder: knitr
 DockerImage: krisrs1128/birs2020:latest
