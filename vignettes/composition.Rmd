@@ -3,7 +3,7 @@ title: "Disentangling Composition and Spatial Effects"
 author: Kris Sankaran^[ksankaran@wisc.edu]
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Features from MIBI Segmentations}
+  %\VignetteIndexEntry{Disentangling Composition and Spatial Effects}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 params:

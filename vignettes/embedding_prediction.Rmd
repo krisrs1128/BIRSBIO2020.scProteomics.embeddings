@@ -3,7 +3,7 @@ title: "Mapping between Embeddings"
 author: Kris Sankaran^[ksankaran@wisc.edu]
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Features from MIBI Segmentations}
+  %\VignetteIndexEntry{Mapping between Embeddings}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 params:
@@ -73,8 +73,8 @@ theme_set(theme_bw() + theme(panel.grid=element_blank()))
 Loading data...
 
 ```{r}
-data_dir <- file.path("..", "Data")
-mibi_sce <- load_mibi(data_dir)
+download_data(file.path("..", "..", "Data"))
+mibi_sce <- load_mibi(file.path("..", "..", "Data"))
 ```
 
 Now, we'll start implementing the outline proposed above, using simplest

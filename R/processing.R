@@ -247,6 +247,8 @@ generate_model <- function(n_ft) {
 #'   as a directory containing all rasters.
 #' @param n_paths If you want to subsample to a small number of images, set the
 #'   limit to n_paths.
+#' @importFrom stringr str_extract
+#' @importFrom SingleCellExperiment colData
 #' @export
 load_mibi <- function(data_dir, n_paths = NULL) {
   load(file.path(data_dir, "mibiSCE.rda"))
@@ -261,7 +263,7 @@ load_mibi <- function(data_dir, n_paths = NULL) {
   }
 
   tiff_paths <- tiff_paths[1:n_paths]
-  sample_names <- stringr::str_extract(tiff_paths, "[0-9]+")
+  sample_names <- str_extract(tiff_paths, "[0-9]+")
   list(
     tiffs = tiff_paths,
     mibi = mibi.sce[, colData(mibi.sce)$SampleID %in% sample_names]
