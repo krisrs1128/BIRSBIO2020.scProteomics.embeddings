@@ -222,6 +222,7 @@ loop_stats <- function(cell_ids, type="raster", ...) {
   dplyr::bind_rows(result)
 }
 
+#' importFrom keras keras_model_sequential layer_dense layer_activation
 generate_model <- function(n_ft) {
   keras_model_sequential() %>%
     layer_dense(units = 32, input_shape = n_ft) %>%
@@ -238,6 +239,15 @@ generate_model <- function(n_ft) {
     compile(optimizer = optimizer_adam(lr = 1e-2), loss = "mae")
 }
 
+#' Load MIBI-ToF into List
+#'
+#' Helper function to load MIBI-TOF data.
+#'
+#' @param data_dir The directory containing the MIBI single cell binary as well
+#'   as a directory containing all rasters.
+#' @param n_paths If you want to subsample to a small number of images, set the
+#'   limit to n_paths.
+#' @export
 load_mibi <- function(data_dir, n_paths = NULL) {
   load(file.path(data_dir, "mibiSCE.rda"))
   tiff_paths <- list.files(
@@ -252,14 +262,21 @@ load_mibi <- function(data_dir, n_paths = NULL) {
 
   tiff_paths <- tiff_paths[1:n_paths]
   sample_names <- stringr::str_extract(tiff_paths, "[0-9]+")
-  summary(mibi.sce)
-  colData(mibi.sce)$cell_type <- cell_type(mibi.sce)
   list(
     tiffs = tiff_paths,
     mibi = mibi.sce[, colData(mibi.sce)$SampleID %in% sample_names]
   )
 }
 
+#' Subsample Rasters
+#'
+#' This lets you subsample a large raster image and the associated experiment
+#' object, for quicker experimentation.
+#' @param tiff_paths The paths containing the full raster images.
+#' @param exper A summarized experiment object, containing measurements for each
+#'   cell.
+#' @param qsize How large should the rasters be?
+#' @export
 spatial_subsample <- function(tiff_paths, exper, qsize=500) {
   ims <- list()
   for (i in seq_along(tiff_paths)) {
@@ -286,12 +303,24 @@ spatial_subsample <- function(tiff_paths, exper, qsize=500) {
   )
 }
 
+#' Division of Samples into Clusters
+#'
+#' Get each samples' distribution across clusters.
+#'
+#' @param SampleID The sample IDs associated with each cell.
+#' @param cluster The cluster membership of each cell.
+#' @export
 sample_proportions <- function(SampleID, cluster) {
   tab <- table(SampleID, cluster)
   props <- tab / rowSums(tab)
   props[hclust(dist(props))$order, ]
 }
 
+#' All Subgraphs of a Graph
+#'
+#' @param G A graph whose subgraphs we want to find.
+#' @param order The size of the subgraphs.
+#' @export
 subgraphs <- function(G, order = 3) {
   ids <- V(G)
   SG <- list()
@@ -305,6 +334,14 @@ subgraphs <- function(G, order = 3) {
   SG
 }
 
+#' Cluster Entropy of Subgraphs
+#'
+#' How much variation in cluster memberships does each subgraph have?
+#'
+#' @param G A graph whose subgraphs we want to find.
+#' @param clusters_ The cluster membership of each cell. Indices must correspond
+#'   to indices of V(G).
+#' @export
 entropies <- function(G, clusters_) {
   ents <- list()
   for (g in seq_along(G)) {
@@ -316,6 +353,10 @@ entropies <- function(G, clusters_) {
   do.call(c, ents)
 }
 
+#' Average Pairwise Distance within Subgraphs
+#'
+#' @param G A graph whose subgraphs we want to find.
+#' @export
 avg_dists <- function(G) {
   dists <- list()
 
@@ -326,6 +367,8 @@ avg_dists <- function(G) {
   do.call(c, dists)
 }
 
+#' Helper to Plot Model Results
+#' @export
 plot_fits <- function(x, y, glmnet_fit, rf_fit) {
   y_hat <- predict(glmnet_fit, x)
   plot(y, y_hat, ylim = range(y), xlim = range(y))
@@ -334,6 +377,8 @@ plot_fits <- function(x, y, glmnet_fit, rf_fit) {
   points(y, y_hat, col = "red")
 }
 
+#' Helper to Fit Models
+#' @export
 fit_wrapper <- function(x, y) {
   glmnet_fit <- glmnet::cv.glmnet(x, y)
   plot(glmnet_fit)
