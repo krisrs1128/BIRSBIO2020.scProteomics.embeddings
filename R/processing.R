@@ -55,6 +55,8 @@ download_data <- function(directory) {
   data_paths
 }
 
+#' Wrapper to get SCE data
+#' @export
 data_list <- function(pattern) {
   global <- ls(envir = .GlobalEnv)
   cell_types <- global[grep(pattern, global)]
@@ -96,6 +98,10 @@ background_prop <- function(x, ...) {
   tibble(background = names(props), props = as.numeric(props / sum(props)))
 }
 
+#' Proportion of Cell Types
+#' 
+#' Function to extract proportion of cell types within each subgraph.
+#' @export
 type_props <- function(x, ...) {
   if (nrow(x) == 0) { # case of no neighbors
     return (tibble(cell_type = NA, props = NA))
@@ -238,7 +244,10 @@ loop_stats <- function(cell_ids, type="raster", ...) {
   dplyr::bind_rows(result)
 }
 
-#' importFrom keras keras_model_sequential layer_dense layer_activation
+#' Multitask Regression Model
+#'
+#' @importFrom keras keras_model_sequential layer_dense layer_activation compile optimizer_adam
+#' @export
 generate_model <- function(n_ft) {
   keras_model_sequential() %>%
     layer_dense(units = 32, input_shape = n_ft) %>%
