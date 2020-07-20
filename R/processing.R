@@ -63,17 +63,24 @@ data_list <- function(pattern) {
   x
 }
 
+#' Polygonize a Raster Image
+#'
+#'  Light wrapper around stars::st_as_stars
+#' @importFrom stars st_as_stars
+#' @importFrom sf st_as_sf st_cast st_buffer
+#' @importFrom dplyr mutate group_by summarise select n
+#' @export
 polygonize <- function(im) {
-  polys <- stars::st_as_stars(im) %>%
-    sf::st_as_sf(merge = TRUE) %>%
-    sf::st_cast("POLYGON")
+  polys <- st_as_stars(im) %>%
+    st_as_sf(merge = TRUE) %>%
+    st_cast("POLYGON")
 
   colnames(polys)[1] <- "cellLabelInImage"
   polys %>%
-    mutate(geometry = sf::st_buffer(geometry, dist = 0)) %>%
+    mutate(geometry = st_buffer(geometry, dist = 0)) %>%
     group_by(cellLabelInImage) %>%
     summarise(n_polys = n(), .groups = "drop") %>%
-    dplyr::select(-n_polys)
+    select(-n_polys)
 }
 
 #' Proportion of image that's Background
@@ -99,10 +106,19 @@ type_props <- function(x, ...) {
     filter(props != 0)
 }
 
+#' Helper to get Cell Type
+#'
+#' Combines the tumor and immune group variables into a generic cell type.
+#'
+#' @param exper A SummarizedExperiment representation of the MIBI data.
+#' @importFrom SummarizedExperiment colData
+#' @importFrom forcats as_factor
+#' @importFrom dplyr select mutate
+#' @export
 cell_type <- function(exper) {
   colData(exper) %>%
     as.data.frame() %>%
-    dplyr::select(tumor_group, immune_group) %>%
+    select(tumor_group, immune_group) %>%
     mutate(
       cell_type = paste0(tumor_group, immune_group),
       cell_type = gsub("not immune", "", cell_type),
@@ -380,6 +396,8 @@ plot_fits <- function(x, y, glmnet_fit, rf_fit) {
 }
 
 #' Helper to Fit Models
+#' @importFrom caret train
+#' @importFrom glmnet cv.glmnet
 #' @export
 fit_wrapper <- function(x, y) {
   glmnet_fit <- glmnet::cv.glmnet(x, y)

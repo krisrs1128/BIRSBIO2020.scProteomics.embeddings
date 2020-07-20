@@ -11,6 +11,7 @@ params:
 ---
 
 ```{r}
+library("SummarizedExperiment")
 library("dplyr")
 library("forcats")
 library("ggplot2")
@@ -50,6 +51,7 @@ cd <- colData(mibi_sce) %>%
   as.data.frame() %>%
   tidyr::unite(scell, SampleID, cellLabelInImage, remove = FALSE) %>%
   mutate(
+    cell_type = cell_type(mibi_sce),
     cell_group = fct_lump(cell_type, prop = 0.05),
     SampleID = factor(SampleID, rownames(props))
   )
@@ -428,14 +430,7 @@ plot(fits$YEAR)
 image(coef(fits$YEAR$glmnet.fit)) # a bunch of these expression values are correlated. Maybe different types of cancers collected in different years
 ```
 
-Considering that this "using known phenotype" approach to assessing
-complementary information doesn't seem to be that promising (we can't predict
-anything meaningful other than TIL Score), we're going to focus more on the
-analyzing-residuals idea. We'll also spend more time deriving new features.
-
-Just seems weird that they published that there was some sort of significance
-when looking at survival. Should revisit the paper to understand.
-
-```{r}
-qplot(x = cd_samp$TIL_score, y = cd_samp$Survival_days_capped_2016.1.1, col = as.factor(cd_samp$Censored))
-```
+Apparently this "using known phenotype" approach to assessing complementary
+information doesn't seem to be that promising (we can't predict anything
+meaningful other than TIL Score). We'll also spend more time deriving new
+features.

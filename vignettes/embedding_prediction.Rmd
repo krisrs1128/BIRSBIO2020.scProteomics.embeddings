@@ -73,8 +73,9 @@ theme_set(theme_bw() + theme(panel.grid=element_blank()))
 Loading data...
 
 ```{r}
-download_data(file.path("..", "..", "Data"))
-mibi_sce <- load_mibi(file.path("..", "..", "Data"))
+data_dir <- file.path("..", "..", "Data")
+download_data(data_dir)
+mibi_sce <- load_mibi(data_dir)
 ```
 
 Now, we'll start implementing the outline proposed above, using simplest
