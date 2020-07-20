@@ -4,6 +4,11 @@ dependencies:
   src: htmlwidgets/lib/d3
   script:
     - d3.v5.min.js
+  name: d3-selection-multi
+  version: 1.0.1
+  src: htmlwidgets/lib/d3-selection-multi
+  script:
+    - d3-selection-multi.v1.min.js
   name: linking
   version: 0.0.1
   src: htmlwidgets/lib/linking
