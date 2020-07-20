@@ -76,7 +76,7 @@ theme_set(theme_bw() + theme(panel.grid=element_blank()))
 Loading data...
 
 ```{r}
-data_dir <- file.path("..", "..", "Data")
+data_dir <- file.path(Sys.getenv("HOME"), "Data")
 download_data(data_dir)
 loaded_ <- load_mibi(data_dir, 10)
 ```

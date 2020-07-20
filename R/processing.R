@@ -38,11 +38,11 @@ download_data <- function(directory) {
   )
 
   if (!file.exists(data_paths[[1]])) {
-    download.file("https://drive.google.com/uc?export=download&id=1cY0KTVVFwI_bwXgCC8tddtB4Rb7dufQJ", data_paths[[1]])
+    download.file("https://srv-file19.gofile.io/download/YSa24g/mibiSCE.rda", data_paths[[1]])
   }
 
   if (!file.exists(data_paths[[2]])) {
-    download.file("https://drive.google.com/uc?export=download&id=1jNZiDUEIvdOkLsKBQoo0B5zzWTaObpLm", data_paths[[2]])
+    download.file("https://srv-file19.gofile.io/download/YSa24g/masstagSCE.rda", data_paths[[2]])
   }
 
   if (!file.exists(data_paths[[3]])) {

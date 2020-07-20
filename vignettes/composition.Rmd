@@ -24,8 +24,9 @@ theme_set(theme_bw() + theme(panel.grid = element_blank()))
 ```
 
 ```{r, message = FALSE, warning = FALSE}
-data_paths <- download_data(file.path("..", "..", "Data"))
-loaded_ <- load_mibi(file.path("..", "..", "Data"))
+data_dir <- file.path(Sys.getenv("HOME"), "Data")
+data_paths <- download_data(data_dir)
+loaded_ <- load_mibi(data_dir)
 subsample <- spatial_subsample(loaded_$tiffs, loaded_$mibi)
 ims <- subsample$ims
 mibi_sce <- subsample$exper

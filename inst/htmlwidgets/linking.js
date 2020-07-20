@@ -8,6 +8,7 @@ HTMLWidgets.widget({
   factory: function(el, width, height) {
     return {
       renderValue: function(x) {
+        console.log(x)
 	      linked_views(el, width, height, x[0], x[1]);
       },
 
