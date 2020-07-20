@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 params:
-  qsize: 1000 # size of image quadrant we subset to
+  qsize: 100 # size of image quadrant we subset to
   max_rank: 2000 # rank at which we start thresholding
   cluster_K: 20 # number of clusters in the umap layout space
 ---
@@ -69,6 +69,7 @@ library("tibble")
 library("tidyr")
 library("umap")
 library("viridis")
+library("BIRSBIO2020.scProteomics.embeddings")
 theme_set(theme_bw() + theme(panel.grid=element_blank()))
 ```
 
@@ -77,7 +78,7 @@ Loading data...
 ```{r}
 data_dir <- file.path("..", "..", "Data")
 download_data(data_dir)
-loaded_ <- load_mibi(data_dir, 4)
+loaded_ <- load_mibi(data_dir, 10)
 ```
 
 Now, we'll start implementing the outline proposed above, using simplest
@@ -116,7 +117,7 @@ Next, we'll extract some features from the spatial data. Note that some cells
 seem to appear in the raster but not in the `colData`. This seems weird, and is
 worth looking into, but for now I'm going to just innerJoin to ignore that.
 
-```{r graph_stats, fig.width=12, fig.height=20}
+```{r graph_stats}
 # polygonize each raster
 col_df <- as.data.frame(colData(mibi_sce)) %>%
   mutate(
@@ -124,21 +125,22 @@ col_df <- as.data.frame(colData(mibi_sce)) %>%
     cell_group = fct_lump(cell_type, prop = 0.05),
   )
 
-sample_names <- as.character(unique(col_df$SampleID))
 polys <- list()
 for (i in seq_along(ims)) {
+  cur_sample <- names(ims)[i]
   cur_cols <- col_df %>%
-    filter(SampleID %in% sample_names[i])
+    filter(SampleID %in% cur_sample)
   polys[[i]] <- polygonize(ims[[i]]) %>%
-    mutate(SampleID = as.numeric(sample_names[i])) %>%
+    mutate(SampleID = as.numeric(cur_sample)) %>%
     unite(sample_by_cell, SampleID, cellLabelInImage, remove=FALSE) %>%
     inner_join(cur_cols, by = c("SampleID", "cellLabelInImage"))
 }
 
+polys <- polys[sapply(polys, nrow) > 0]
 col_df <- col_df %>%
   unite(sample_by_cell, SampleID, cellLabelInImage, remove=FALSE)
 
-  # a little plot
+# a little plot
 polys_df <- do.call(rbind, polys)
 ggplot(polys_df %>% filter(!is.na(cellSize))) +
   geom_sf(aes(fill = as.factor(tumorYN))) +
@@ -164,11 +166,11 @@ for (i in seq_along(polys)) {
   G <- extract_graph(polys[[i]])
   graph_stats[[i]] <- loop_stats(cell_ids, "graph", G, polys[[i]], type_props) %>%
     mutate(cellType = paste0("graph_neighbors_", cellType)) %>%
-    spread(cellType, props, 0)
+    spread(cellType, props, 0) %>%
+    mutate(SampleID = first(polys[[i]]$SampleID))
 }
 
-names(graph_stats) <- sample_names
-graph_stats <- bind_rows(graph_stats, .id = "SampleID") %>%
+graph_stats <- bind_rows(graph_stats) %>%
   mutate_all(replace_na, 0) %>%
   unite(sample_by_cell, SampleID, cellLabelInImage) %>%
   left_join(as.data.frame(cell_stats))
@@ -183,11 +185,12 @@ Now, we'll standardize these features and learn some embeddings.
 # standardize features between the two tables
 x <- t(assay(mibi_sce)) %>%
   as_tibble()
-x$sample_by_cell <- cell_stats$sample_by_cell
+
 x <- x %>%
-  mutate_at(vars(-sample_by_cell), function(u) (u - min(u)) / diff(range(u))) %>%
-  mutate_at(vars(-sample_by_cell), function(u) u / sqrt(ncol(x))) %>%
-  dplyr::select_if(function(u) !all(is.na(u)))
+  mutate_all( function(u) (u - min(u)) / diff(range(u))) %>%
+  mutate_all(function(u) u / sqrt(ncol(x))) %>%
+  dplyr::select_if(function(u) !all(is.na(u))) %>%
+  mutate(sample_by_cell = col_df$sample_by_cell)
 
 y <- graph_stats %>%
   mutate_at(vars(-sample_by_cell), function(u) (u - min(u)) / diff(range(u))) %>%
@@ -281,6 +284,11 @@ cluster_props <- embeddings_df %>%
   mutate(
     total = sum(count),
     prop = count / total
+    ) %>%
+  left_join(
+    col_df %>%
+      dplyr::select(SampleID, GRADE) %>%
+      unique()
   )
 
 ggplot(cluster_props) +
@@ -308,7 +316,7 @@ polys_q <- polys_df %>%
 
 ggplot(polys_q) +
   geom_sf(aes(fill = as.factor(tumorYN))) +
-  facet_wrap(compare ~ SampleID)
+  facet_wrap(compare ~ SampleID) +
   theme(legend.position = "bottom")
 ```
 
@@ -318,11 +326,19 @@ of empty space, but at least the first three do seem qualitatively similar.
 In fact, we can compare many of the spatial images, based on the ordering we
 just defined.
 
-```{r, fig.height=20, fig.width=10}
-polys_df <- polys_df %>%
-  mutate(SampleID = factor(SampleID, levels(cluster_props$SampleID)))
+```{r}
+cluster_props_wide <- cluster_props %>%
+  dcast(SampleID ~ cluster, value.var = "prop", fill = 0)
 
-ggplot(polys_df %>% filter(SampleID %in% levels(polys_df$SampleID))) +
+ sample_order <- cluster_props_wide %>%
+  dist() %>%
+  hclust()
+sample_order <- sample_order$order
+
+polys_df <- polys_df %>%
+  mutate(SampleID = factor(SampleID, levels = as.character(cluster_props_wide$SampleID[sample_order])))
+
+ggplot(polys_df %>% filter(SampleID %in% levels(polys_df$SampleID)[1:12])) +
   geom_sf(aes(fill = as.factor(tumorYN))) +
   facet_wrap(GRADE ~ SampleID) +
   theme(legend.position = "bottom")
@@ -330,8 +346,8 @@ ggplot(polys_df %>% filter(SampleID %in% levels(polys_df$SampleID))) +
 tmp <- cluster_props %>%
   left_join(
     col_df %>%
-    dplyr::select(SampleID, GRADE) %>%
-    unique()
+      dplyr::select(SampleID, GRADE) %>%
+      unique()
   )
 
 ggplot(tmp) +
@@ -367,21 +383,22 @@ indicators to embedding locations.
 predictors <- x %>%
   left_join(
     y %>%
-    dplyr::select(-starts_with("graph"), -log_size) %>%
+    dplyr::select(-starts_with("graph")) %>%
     rename_all(tolower),
     by = "sample_by_cell"
   )
+
 response <- embeddings_df %>%
   dplyr::select(l1, l2) %>%
   as.matrix()
 
 pred_mat <- predictors %>%
-  dplyr::select(common_antigens, tolower(levels(col_df$cell_type))) %>%
+  dplyr::select(all_of(common_antigens)) %>%
   as.matrix()
 
 model <- generate_model(ncol(pred_mat))
 model %>%
-  fit(pred_mat, response, epochs=1000, batch_size=1024)
+  fit(pred_mat, response, epochs=200, batch_size=1024)
 ```
 
 ```{r}
@@ -404,12 +421,12 @@ the antigens (but no explicit spatial information).
 
 ```{r}
 pred_mat <- predictors %>%
-  dplyr::select(colnames(x)[1:49], tolower(levels(col_df$cell_type))) %>%
+  dplyr::select(-sample_by_cell) %>%
   as.matrix()
 
 model <- generate_model(ncol(pred_mat))
 model %>%
-  fit(pred_mat, response, epochs=1000, batch_size=1024)
+  fit(pred_mat, response, epochs=200, batch_size=1024)
 ```
 
 ```{r}
@@ -417,8 +434,6 @@ y_hat <- predict(model, pred_mat)
 plot(response, cex=0.1, col = rgb(0, 0, 0, 0.1))
 points(y_hat, cex=0.1, col = rgb(1, 0, 0, 0.1))
 ```
-
-What do these (cell-level) predictions look like when we use the mass spec data?
 
 [^1]: We can try predicting different sample characteristics from the
     embeddings, for example. It seems like what people do by eye anyways (trying
