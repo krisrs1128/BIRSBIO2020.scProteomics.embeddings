@@ -2,10 +2,10 @@
 % Please edit documentation in R/processing.R
 \name{generate_model}
 \alias{generate_model}
-\title{importFrom keras keras_model_sequential layer_dense layer_activation}
+\title{Multitask Regression Model}
 \usage{
 generate_model(n_ft)
 }
 \description{
-importFrom keras keras_model_sequential layer_dense layer_activation
+Multitask Regression Model
 }
