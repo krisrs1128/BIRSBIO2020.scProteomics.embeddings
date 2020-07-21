@@ -7,10 +7,7 @@ HTMLWidgets.widget({
 
     return {
       renderValue: function(x) {
-        el.innerText = x.message;
-        d3.select(el)
-          .append("g")
-          .attr("id", "thisisatest");
+        linked_views(el, width, height, x.polys, HTMLWidgets.dataframeToD3(x.dimred));
       },
 
       resize: function(width, height) {}
