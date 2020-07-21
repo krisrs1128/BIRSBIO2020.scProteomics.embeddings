@@ -5,6 +5,8 @@ params:
 ---
 
 ```{r}
+library("dplyr")
+library("geojsonio")
 library("ggplot2")
 library("igraph")
 library("raster")
@@ -13,7 +15,6 @@ library("spdep")
 library("stars")
 library("stringr")
 library("tidyr")
-library("dplyr")
 library("umap")
 library("BIRSBIO2020.scProteomics.embeddings")
 theme_set(theme_bw() + theme(panel.grid=element_blank()))
@@ -66,13 +67,7 @@ dimred <- dimred %>%
 ```
 
 ```{r}
-document(); install(quick = TRUE)
+install(quick=T)
 library("BIRSBIO2020.scProteomics.embeddings")
-linked_views("test", elementId = "thisisatest")
-
-linked_views("argument to r call", elementId =  "main_element") %>%
-  onRender("function(el, x) {
-  console.log(\"test\")
-  console.log(x);
-}")
+linked_views(geojson_json(polys), dimred, 900, 500)
 ```
