@@ -15,31 +15,32 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 imports:
     htmltools,
-    htmlwidgets
-Depends:
+    htmlwidgets,
     caret,
-    dplyr,
-    forcats,
     geojsonio,
-    geojsonio,
-    ggplot2,
     glmnet,
-    igraph,
     pracma,
     randomForest,
     randomForestSRC,
-    raster,
     readr,
     reshape2,
     reticulate,
+    tidyr,
+    viridis
+Depends:
+    SingleCellExperiment,
+    SummarizedExperiment,
+    dplyr,
+    forcats,
+    ggplot2,
+    igraph,
+    raster,
     scales,
     sf,
     spdep,
     stars,
     tensorflow,
-    tidyr,
-    umap,
-    viridis
+    umap
 Suggests: 
     knitr,
     rmarkdown,
