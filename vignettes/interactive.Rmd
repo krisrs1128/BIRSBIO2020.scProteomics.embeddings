@@ -1,5 +1,11 @@
 ---
-title: Interactive Visualization
+title: "Interactive Visualization using Linked Views"
+author: Kris Sankaran^[ksankaran@wisc.edu]
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Interactive Visualization using Linked Views}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r}
@@ -60,9 +66,16 @@ input_data <- function(cell_full, tiff_paths, sample_id, crop_size=1000, simplif
 
 Now we can make this figure for as many patients as we want.
 
-```{r}
-for (i in seq_len(10)) {
-  data_ <- input_data(cell_full, loaded_$tiffs, i, 1000)
-  linked_views(data_$polys, data_$dimred)
+```{r, warning=F, message=F}
+data_ <- list()
+for (i in seq_len(6)) {
+  data_[[i]] <- input_data(cell_full, loaded_$tiffs, i)
 }
+
+linked_views(data_[[1]]$polys, data_[[1]]$dimred)
+linked_views(data_[[2]]$polys, data_[[2]]$dimred)
+linked_views(data_[[3]]$polys, data_[[3]]$dimred)
+linked_views(data_[[4]]$polys, data_[[4]]$dimred)
+linked_views(data_[[5]]$polys, data_[[5]]$dimred)
+linked_views(data_[[6]]$polys, data_[[6]]$dimred)
 ```

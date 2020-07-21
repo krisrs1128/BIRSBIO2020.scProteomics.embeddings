@@ -4,7 +4,7 @@
 \alias{linked_views}
 \title{Interactive Linked_Viewss}
 \usage{
-linked_views(polys, dimred, width = 400, height = 130, elementId = NULL)
+linked_views(polys, dimred, width = 900, height = 450, elementId = NULL)
 }
 \description{
 Interactive Linked_Viewss
