@@ -110,11 +110,19 @@ function cellBrushFun(el, scales, originOffset, features) {
     let extent = brushExtent(this, scales.proj, originOffset),
         firstVertices = features.map(
           (d) => {
-            return {
-              "V1": d.geometry.coordinates[0][0][0],
-              "V2": d.geometry.coordinates[0][0][1],
-              cellLabelInImage: d.properties.cellLabelInImage
-            };
+            if (d.geometry.type == "MultiPolygon") {
+              return {
+                "V1": d.geometry.coordinates[0][0][0][0],
+                "V2": d.geometry.coordinates[0][0][0][1],
+                cellLabelInImage: d.properties.cellLabelInImage
+              };
+            } else {
+              return {
+                "V1": d.geometry.coordinates[0][0][0],
+                "V2": d.geometry.coordinates[0][0][1],
+                cellLabelInImage: d.properties.cellLabelInImage
+              };
+            }
           });
     state.dimred = testExtent(firstVertices, extent, [0, 1]);
     updateHighlighted(el, state);

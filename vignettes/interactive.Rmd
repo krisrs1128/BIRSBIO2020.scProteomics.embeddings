@@ -62,7 +62,7 @@ Now we can make this figure for as many patients as we want.
 
 ```{r}
 for (i in seq_len(10)) {
-  data_ <- input_data(cell_full, loaded_$tiffs, i)
+  data_ <- input_data(cell_full, loaded_$tiffs, i, 1000)
   linked_views(data_$polys, data_$dimred)
 }
 ```
