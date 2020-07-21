@@ -2,11 +2,11 @@
  * Linked Views
  **/
 
-let state = {cells: new Set([]), hm: new Set([])};
+let state = {polys: new Set([]), dimred: new Set([])};
 
 
 function linked_views(el, width, height, polys, dimred) {
-  d3.select(el)
+  let svg = d3.select(el)
     .append("svg")
     .attrs({
       id: "svg",
@@ -14,23 +14,20 @@ function linked_views(el, width, height, polys, dimred) {
       height: height
     });
 
-  d3.select(el)
-    .select("#svg")
-    .selectAll("g")
-    .data(["cells", "scatter"]).enter()
+  svg.selectAll("g")
+    .data(["cells", "scatter", "cellBrush", "scatterBrush"]).enter()
     .append("g")
     .attr("id", (d) => d);
 
   let scales = getScales(width, height);
 
-  d3.select(el)
-    .select("#scatter")
-    .attrs({
-      transform: `translate(${scales.scatterX.range()[1]}, 10)`
-    });
+  svg.select("#scatter")
+    .attrs({transform: `translate(${scales.scatterX.range()[1]}, 10)`});
 
-  initializeCells(d3.select(el).select("#cells"), scales, polys);
-  initializeScatter(d3.select(el).select("#scatter"), scales, dimred);
+  initializeCells(svg.select("#cells"), scales, polys);
+  initializeScatter(svg.select("#scatter"), scales, dimred);
+  addBrush(svg.select("#scatterBrush"), scatterBrushFun, scales, [scales.scatterX.range()[1], 0], "scatterBrush");
+  addBrush(svg.select("#cellBrush"), cellBrushFun, scales, [0, 0], "cellBrush");
 }
 
 function initializeCells(root, scales, polys) {
@@ -48,12 +45,10 @@ function initializeCells(root, scales, polys) {
         return f;
       },
       "stroke-width": 0.1
-    })
-    .on("mouseover", cellOver);
+    });
 }
 
 function initializeScatter(root, scales, dimred) {
-  console.log(dimred)
   root.selectAll('circle')
     .data(dimred).enter()
     .append('circle')
@@ -68,31 +63,69 @@ function initializeScatter(root, scales, dimred) {
       stroke: "#0c0c0c",
       "stroke-width": 0.1,
       class: "scatterCircle"
-    })
-    .on("mouseover", scatterOver);
+    });
+}
+
+function addBrush(el, brushFun, scales, originOffset, brushId) {
+  let brush = d3.brush()
+      .on("brush", brushFun(scales, originOffset))
+      .extent([
+        [scales.scatterX.range()[0] + originOffset[0], scales.scatterY.range()[0] + originOffset[1]],
+        [scales.scatterX.range()[1] + originOffset[0], scales.scatterY.range()[1] + originOffset[1]]
+      ]);
+
+  el.append("g")
+    .attr("id", brushId)
+    .classed("brush", true)
+    .call(brush);
+}
+
+function scatterBrushFun(scales, originOffset) {
+  return function() {
+    let extent = brushExtent(this, [scales.scatterX, scales.scatterY], originOffset);
+    // update state.polys
+    // rerender
+  };
+}
+
+function brushExtent(brush, scales, originOffset) {
+  let pixelExtent = d3.brushSelection(brush),
+      extent = [[0, 0], [0, 0]];
+
+  for (let i = 0; i < pixelExtent.length; i++) {
+    for (let j = 0; j < originOffset.length; j++) {
+      extent[i][j] = scales[j].invert(pixelExtent[i][j] - originOffset[j]);
+    }
+  }
+
+  return extent;
+}
+
+function cellBrushFun(scales, originOffset) {
+  return function() {};
 }
 
 function cellOver(data) {
-  const curState = new Set([...state.cells, ...state.hm]);
+  const curState = new Set([...state.polys, ...state.dimred]);
   curState.add(data.properties.cellLabelInImage);
   updateHighlighted(curState);
 
   if (d3.event.shiftKey) {
-    state.cells.add(data.properties.cellLabelInImage);
+    state.polys.add(data.properties.cellLabelInImage);
   } else if (d3.event.ctrlKey) {
-    state.cells.delete(data.properties.cellLabelInImage);
+    state.polys.delete(data.properties.cellLabelInImage);
   }
 }
 
 function scatterOver(data) {
-  const curState = new Set([...state.cells, ...state.hm]);
+  const curState = new Set([...state.polys, ...state.dimred]);
   curState.add(data.cellLabelInImage);
   updateHighlighted(curState);
 
   if (d3.event.shiftKey) {
-    state.hm.add(data.cellLabelInImage);
+    state.dimred.add(data.cellLabelInImage);
   } else if (d3.event.ctrlKey) {
-    state.hm.delete(data.cellLabelInImage);
+    state.dimred.delete(data.cellLabelInImage);
   }
 }
 
