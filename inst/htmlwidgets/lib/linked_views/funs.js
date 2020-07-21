@@ -26,8 +26,17 @@ function linked_views(el, width, height, polys, dimred) {
 
   initializeCells(svg.select("#cells"), scales, polys);
   initializeScatter(svg.select("#scatter"), scales, dimred);
-  addBrush(svg.select("#scatterBrush"), scatterBrushFun, scales, [scales.scatterX.range()[1], 0], "scatterBrush");
-  addBrush(svg.select("#cellBrush"), cellBrushFun, scales, [0, 0], "cellBrush");
+
+  // logic for where the brushes should go
+  let extent = [[scales.scatterX.range()[0], scales.scatterY.range()[0]],
+                [scales.scatterX.range()[1], scales.scatterY.range()[1]]];
+  let brushFun = cellBrushFun(scales, [0, 0], polys);
+  addBrush(svg.select("#cellBrush"), brushFun, extent, "cellBrush");
+
+  extent = [[scales.scatterX.range()[0] + scales.scatterX.range()[1], scales.scatterY.range()[0]],
+            [2 * scales.scatterX.range()[1], scales.scatterY.range()[1]]];
+  brushFun = scatterBrushFun(scales, [scales.scatterX.range()[1], 0], dimred),
+  addBrush(svg.select("#scatterBrush"),  brushFun, extent, "scatterBrush");
 }
 
 function initializeCells(root, scales, polys) {
@@ -66,13 +75,10 @@ function initializeScatter(root, scales, dimred) {
     });
 }
 
-function addBrush(el, brushFun, scales, originOffset, brushId) {
+function addBrush(el, brushFun, extent, brushId) {
   let brush = d3.brush()
-      .on("brush", brushFun(scales, originOffset))
-      .extent([
-        [scales.scatterX.range()[0] + originOffset[0], scales.scatterY.range()[0] + originOffset[1]],
-        [scales.scatterX.range()[1] + originOffset[0], scales.scatterY.range()[1] + originOffset[1]]
-      ]);
+      .on("brush", brushFun)
+      .extent(extent);
 
   el.append("g")
     .attr("id", brushId)
@@ -80,11 +86,20 @@ function addBrush(el, brushFun, scales, originOffset, brushId) {
     .call(brush);
 }
 
-function scatterBrushFun(scales, originOffset) {
+function scatterBrushFun(scales, originOffset, dimred) {
   return function() {
     let extent = brushExtent(this, [scales.scatterX, scales.scatterY], originOffset);
-    // update state.polys
-    // rerender
+
+    state.polys = new Set([]);
+    for (var i = 0; i < dimred.length; i++) {
+      if (dimred[i].V1 > extent[0][0] && dimred[i].V1 < extent[1][0]) {
+        if (dimred[i].V2 > extent[0][1] && dimred[i].V2 < extent[1][1]) {
+          state.polys.add(dimred[i].cellLabelInImage);
+        }
+      }
+    }
+
+    updateHighlighted(state);
   };
 }
 
@@ -101,7 +116,7 @@ function brushExtent(brush, scales, originOffset) {
   return extent;
 }
 
-function cellBrushFun(scales, originOffset) {
+function cellBrushFun(scales, originOffset, polys) {
   return function() {};
 }
 
@@ -130,6 +145,8 @@ function scatterOver(data) {
 }
 
 function updateHighlighted(curState) {
+  curState = new Set([...curState.polys, ...curState.dimred]);
+
   d3.select('#scatter')
     .selectAll('.scatterCircle')
     .attrs({
@@ -140,7 +157,7 @@ function updateHighlighted(curState) {
   d3.select('#cells')
     .selectAll('.cellPath')
     .attrs({
-      "stroke-width": (d) => curState.has(d.properties.cellLabelInImage) ? 1 : 0.1
+      "fill-opacity": (d) => { return curState.has(d.properties.cellLabelInImage) ? 1 : 0.1}
     });
 }
 
