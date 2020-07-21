@@ -12,7 +12,7 @@ jobs:
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
         shell: Rscript {0}
 
-      - uses: suisei-cn/actions-download-file@v1
+          - uses: suisei-cn/actions-download-file@v1
         id: download_mibi
         name: Download mibi file
         with:
@@ -28,10 +28,10 @@ jobs:
 
       - uses: suisei-cn/actions-download-file@v1
         id: download_tiffs
-        name: Download masstag file
+        name: Download tiffs
         with:
           url: "https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip"
-          target: /home/rstudio/Data/TNBC_shareCellData/
+          target: /home/rstudio/Data/TNBC_shareCellData/tnbc.zip
           
       - name: Unzip TNBC data
         run: |
