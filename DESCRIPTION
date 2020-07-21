@@ -14,17 +14,19 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 imports:
-    htmltools,
-    htmlwidgets,
     caret,
     geojsonio,
     glmnet,
+    htmltools,
+    htmlwidgets,
+    keras,
     pracma,
     randomForest,
     randomForestSRC,
     readr,
     reshape2,
     reticulate,
+    tensorflow,
     tidyr,
     viridis
 Depends:
@@ -39,7 +41,6 @@ Depends:
     sf,
     spdep,
     stars,
-    tensorflow,
     umap
 Suggests: 
     knitr,
