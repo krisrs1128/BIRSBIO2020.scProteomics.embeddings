@@ -11,6 +11,7 @@ library("ggplot2")
 library("igraph")
 library("raster")
 library("readr")
+library("rmapshaper")
 library("spdep")
 library("stars")
 library("stringr")
@@ -69,5 +70,10 @@ dimred <- dimred %>%
 ```{r}
 install(quick=T)
 library("BIRSBIO2020.scProteomics.embeddings")
-linked_views(geojson_json(polys), dimred, 900, 500)
+geo_polys <- geojson_json(polys) %>%
+  geojson_sp() %>%
+  ms_simplify(keep = 0.4) %>%
+  geojson_json()
+
+linked_views(geo_polys, dimred, 900, 500)
 ```
