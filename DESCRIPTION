@@ -16,10 +16,35 @@ RoxygenNote: 7.1.1
 imports:
     htmltools,
     htmlwidgets
+Depends:
+    caret,
+    dplyr,
+    forcats,
+    geojsonio,
+    geojsonio,
+    ggplot2,
+    glmnet,
+    igraph,
+    pracma,
+    randomForest,
+    randomForestSRC,
+    raster,
+    readr,
+    reshape2,
+    reticulate,
+    scales,
+    sf,
+    spdep,
+    stars,
+    tensorflow,
+    tidyr,
+    umap,
+    viridis
 Suggests: 
     knitr,
     rmarkdown,
-    pkgdown
+    pkgdown,
+    rmapshaper
 URL: https://krisrs1128.github.io/BIRSBIO2020.scProteomics.embeddings
 VignetteBuilder: knitr
 DockerImage: krisrs1128/birs2020:latest
