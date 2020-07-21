@@ -29,6 +29,14 @@ jobs:
           Rscript -e "remotes::install_github('r-hub/sysreqs')"
           sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
           sudo -s eval "$sysreqs"
+          sudo apt-get install -y libglpk-dev
+          apt-get install -y software-properties-common
+          add-apt-repository ppa:deadsnakes/ppa
+          apt-get update
+          apt-get install -y python3.7
+          apt-get install -y libpython3.7-dev
+          apt-get install -y python3-pip
+          apt-get install -y python3-venv python3-virtualenv
           
       - name: Install dependencies
         run: |
