@@ -66,6 +66,7 @@ input_data <- function(cell_full, tiff_paths, sample_id, crop_size=1000, simplif
 
 Now we can make this figure for as many patients as we want.
 
+
 ```{r, warning=F, message=F}
 data_ <- list()
 for (i in seq_len(6)) {
