@@ -1,79 +1,68 @@
 ---
-title: Prepare Data for Vis
-params:
-  sample_id: 1
+title: Interactive Visualization
 ---
 
 ```{r}
 library("dplyr")
 library("geojsonio")
-library("ggplot2")
-library("igraph")
 library("raster")
 library("readr")
 library("rmapshaper")
-library("spdep")
-library("stars")
-library("stringr")
-library("tidyr")
 library("umap")
 library("BIRSBIO2020.scProteomics.embeddings")
-theme_set(theme_bw() + theme(panel.grid=element_blank()))
 ```
-
-First, get polygon data. Very similar to what's in `process_segmentations.Rmd`,
-probably could be abstracted into separate functions.
 
 ```{r}
 data_dir <- file.path(Sys.getenv("HOME"), "Data")
 download_data(data_dir)
 loaded_ <- load_mibi(data_dir)
-im <- raster(loaded_$tiffs[grepl(paste0("p", params$sample_id, "_"), loaded_$tiffs)])
-im <- crop(im, extent(im, 0, 1000, 0, 1000)) # comment out to work on full data
-
-polys <- st_as_stars(im) %>%
-  st_as_sf(merge = TRUE) %>%
-  st_cast("POLYGON")
-colnames(polys)[1] <- "cellLabelInImage"
-
-cell_data <- read_csv(file.path(data_dir,  "TNBC_shareCellData", "cellData.csv")) %>%
-  filter(SampleID == params$sample_id) %>%
-  unite(cell_cluster, c("tumorCluster", "immuneCluster"), remove=F)
-
-polys <- polys %>%
-  inner_join(cell_data) %>%
-  group_by(cellLabelInImage) %>% # some regions get split into two adjacent polys --> merge
-  summarise_all(function(x) { x[1] })
+cell_full <- read_csv(file.path(data_dir,  "TNBC_shareCellData", "cellData.csv"))
 ```
 
-We'll want to order the cells according to a clustering.
+Here's a helper that will prepare the U-Map projection and polygon data for our
+downstream plot.
 
 ```{r}
-channels <- setdiff(colnames(polys), c("cellLabelInImage", "SampleID", "cellSize", "Background", "tumorYN", "cell_cluster", "tumorCluster", "Group", "immuneCluster", "immuneGroup", "geometry"))
-x <- polys[, channels] %>%
-  as.data.frame() %>%
-  dplyr::select(-geometry)
+input_data <- function(cell_full, tiff_paths, sample_id, crop_size=1000, simplify=0.4) {
+  # read the associated raster
+  im <- raster(tiff_paths[grepl(paste0("p", sample_id, "_"), tiff_paths)])
+  im <- crop(im, extent(im, 0, crop_size, 0, crop_size)) # comment out to work on full data
+  polys <- polygonize(im) %>%
+    filter(!(cellLabelInImage %in% c(0, 1)))
 
-dimred <- umap(x) %>%
-  .[["layout"]]
+  # filter down to relevant data
+  cell_data <- cell_full %>%
+    filter(
+      SampleID == sample_id,
+      cellLabelInImage %in% polys$cellLabelInImage
+    )
 
-dimred <- dimred %>%
-  as.data.frame() %>%
-  mutate(
-    cellLabelInImage = polys$cellLabelInImage,
-    tumorYN = polys$tumorYN,
-    tumorCluster = polys$tumorCluster,
-    immuneGroup = polys$immuneGroup
-  )
+  polys <- polys %>%
+    left_join(cell_data)
+
+  # run U-Map on channel data
+  channels <- setdiff(colnames(cell_data), c("cellLabelInImage", "SampleID", "cellSize", "Background", "tumorYN", "cell_cluster", "tumorCluster", "Group", "immuneCluster", "immuneGroup"))
+  dimred <- umap(cell_data[, channels]) %>%
+    .[["layout"]] %>%
+    data.frame() %>%
+    rename(V1 = X1, V2 = X2)
+  dimred <- cbind(cell_data, dimred)
+
+  # convert to geojson
+  geo_polys <- geojson_json(polys) %>%
+    geojson_sp() %>%
+    ms_simplify(keep = simplify) %>%
+    geojson_json()
+
+  list("dimred" = dimred, "polys" = geo_polys)
+}
 ```
 
-```{r}
-library("BIRSBIO2020.scProteomics.embeddings")
-geo_polys <- geojson_json(polys) %>%
-  geojson_sp() %>%
-  ms_simplify(keep = 0.4) %>%
-  geojson_json()
+Now we can make this figure for as many patients as we want.
 
-install(quick=T)
-linked_views(geo_polys, dimred)
+```{r}
+for (i in seq_len(10)) {
+  data_ <- input_data(cell_full, loaded_$tiffs, i)
+  linked_views(data_$polys, data_$dimred)
+}
 ```
