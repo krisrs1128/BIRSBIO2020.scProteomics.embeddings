@@ -68,12 +68,12 @@ dimred <- dimred %>%
 ```
 
 ```{r}
-install(quick=T)
 library("BIRSBIO2020.scProteomics.embeddings")
 geo_polys <- geojson_json(polys) %>%
   geojson_sp() %>%
   ms_simplify(keep = 0.4) %>%
   geojson_json()
 
-linked_views(geo_polys, dimred, 900, 500)
+install(quick=T)
+linked_views(geo_polys, dimred)
 ```

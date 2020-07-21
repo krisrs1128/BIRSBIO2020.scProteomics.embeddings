@@ -2,8 +2,7 @@
 #'
 #' @import htmlwidgets
 #' @export
-linked_views <- function(polys, dimred, width = 400, height = 130, elementId = NULL) {
-  print("testing...")
+linked_views <- function(polys, dimred, width = 900, height = 450, elementId = NULL) {
   htmlwidgets::createWidget(
     name = "linked_views",
     list(polys = polys, dimred = dimred),
