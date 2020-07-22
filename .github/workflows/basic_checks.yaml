@@ -31,7 +31,7 @@ jobs:
           mkdir -p /github/home/Data/TNBC_shareCellData/
           cd /github/home/Data/TNBC_shareCellData/
           wget https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
-          unzip -v 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
+          unzip 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip || \ ( e=$? && if [ $e -ne 11 ]; then exit $e; fi )
           ls
 
       - name: Move downloads
@@ -39,9 +39,6 @@ jobs:
           cd /github/home/Data/
           mv yl667qrpgr53l9iw7t1bmnmlk6v99n4o.rda mibiSCE.rda
           mv  hcb7i89v5xn90vdf3d5hc0z62rdb1jp9.rda3 masstagSCE.rda
-          ls
-          cd TNBC_shareCellData/
-          ls
 
       - name: Cache R packages
         if: runner.os != 'Windows'
