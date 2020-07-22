@@ -16,15 +16,15 @@ jobs:
         id: download_mibi
         name: Download mibi file
         with:
-          url: "https://srv-file19.gofile.io/download/YSa24g/mibiSCE.rda"
-          target: /github/home/Data/
+          url: "https://uwmadison.box.com/shared/static/yl667qrpgr53l9iw7t1bmnmlk6v99n4o.rda"
+          target: /github/home/Data/mibiSCE.rda
 
       - uses: suisei-cn/actions-download-file@v1
         id: download_masstag
         name: Download masstag file
         with:
-          url: "https://srv-file19.gofile.io/download/YSa24g/masstagSCE.rda"
-          target: /github/home/Data/
+          url: "https://uwmadison.box.com/shared/static/hcb7i89v5xn90vdf3d5hc0z62rdb1jp9.rda3"
+          target: /github/home/Data/masstagSCE.rda
 
       - name: Look at downloads
         run: |

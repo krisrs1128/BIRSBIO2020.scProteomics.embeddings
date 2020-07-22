@@ -38,11 +38,11 @@ download_data <- function(directory) {
   )
 
   if (!file.exists(data_paths[[1]])) {
-    download.file("https://srv-file19.gofile.io/download/YSa24g/mibiSCE.rda", data_paths[[1]])
+    download.file("https://uwmadison.box.com/shared/static/yl667qrpgr53l9iw7t1bmnmlk6v99n4o.rda", data_paths[[1]])
   }
 
   if (!file.exists(data_paths[[2]])) {
-    download.file("https://srv-file19.gofile.io/download/YSa24g/masstagSCE.rda", data_paths[[2]])
+    download.file("https://uwmadison.box.com/shared/static/hcb7i89v5xn90vdf3d5hc0z62rdb1jp9.rda3", data_paths[[2]])
   }
 
   if (!file.exists(data_paths[[3]])) {
