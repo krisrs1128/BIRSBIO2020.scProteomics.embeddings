@@ -48,6 +48,7 @@ Suggests:
     rmarkdown,
     pkgdown,
     rmapshaper
+    V8
 URL: https://krisrs1128.github.io/BIRSBIO2020.scProteomics.embeddings
 VignetteBuilder: knitr
 DockerImage: krisrs1128/birs2020:latest

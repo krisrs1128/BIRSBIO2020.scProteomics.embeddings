@@ -148,7 +148,7 @@ ggplot(spatial_cell) +
   )
 
 slev <- spatial_samp %>%
-  select(SampleID, mdist) %>%
+  dplyr::select(SampleID, mdist) %>%
   arrange(mdist) %>%
   .[["SampleID"]]
 
@@ -223,12 +223,12 @@ spatial_samp <- spatial_samp %>%
   mutate(SampleID = factor(SampleID, levels(mprops$SampleID)))
 
 spatial_comp <- spatial_samp %>%
-  select(SampleID, me, sde, mdist, sdist, TIL_score) %>%
+  dplyr::select(SampleID, me, sde, mdist, sdist, TIL_score) %>%
   left_join(mprops) %>%
   dcast(SampleID + me + sde + mdist + sdist + TIL_score ~ cluster)
 
 x <- spatial_comp %>%
-  select(matches("[0-9]+")) %>%
+  dplyr::select(matches("[0-9]+")) %>%
   as.matrix() %>%
   sqrt()
 ```
@@ -360,7 +360,7 @@ We'll try both approaches here. First, predicting separately, then together.
 
 ```{r}
 combined_x <- spatial_comp %>%
-  select(-SampleID, -TIL_score) %>%
+  dplyr::select(-SampleID, -TIL_score) %>%
   mutate_at(vars(matches("[0-9]+")), sqrt) %>%
   as.matrix()
 
