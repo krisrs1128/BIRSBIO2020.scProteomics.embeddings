@@ -17,27 +17,21 @@ jobs:
         name: Download mibi file
         with:
           url: "https://srv-file19.gofile.io/download/YSa24g/mibiSCE.rda"
-          target: /home/rstudio/Data/
+          target: /github/home/Data/
 
       - uses: suisei-cn/actions-download-file@v1
         id: download_masstag
         name: Download masstag file
         with:
           url: "https://srv-file19.gofile.io/download/YSa24g/masstagSCE.rda"
-          target: /home/rstudio/Data/
+          target: /github/home/Data/
 
       - name: Downloading rasters
         run: |
-          mkdir /home/rstudio/Data/TNBC_shareCellData/
-          cd /home/rstudio/Data/TNBC_shareCellData/
+          mkdir -p /github/home/Data/TNBC_shareCellData/
+          cd /github/home/Data/TNBC_shareCellData/
           wget https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
-          ls
           unzip -v 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
-          ls
-          echo $HOME
-          export HOME=/home/rstudio
-          echo $HOME
-          ls /home/rstudio/
 
       - name: Cache R packages
         if: runner.os != 'Windows'
@@ -64,7 +58,6 @@ jobs:
           apt-get install -y libpython3.7-dev
           apt-get install -y python3-pip
           apt-get install -y python3-venv python3-virtualenv
-          echo $HOME
       
       - name: Install dependencies
         run: |
