@@ -17,18 +17,20 @@ jobs:
         name: Download mibi file
         with:
           url: "https://uwmadison.box.com/shared/static/yl667qrpgr53l9iw7t1bmnmlk6v99n4o.rda"
-          target: /github/home/Data/mibiSCE.rda
+          target: /github/home/Data/
 
       - uses: suisei-cn/actions-download-file@v1
         id: download_masstag
         name: Download masstag file
         with:
           url: "https://uwmadison.box.com/shared/static/hcb7i89v5xn90vdf3d5hc0z62rdb1jp9.rda3"
-          target: /github/home/Data/masstagSCE.rda
+          target: /github/home/Data/
 
       - name: Look at downloads
         run: |
-          ls /github/home/Data/
+          cd /github/home/Data/
+          mv yl667qrpgr53l9iw7t1bmnmlk6v99n4o.rda mibiSCE.rda
+          mv hcb7i89v5xn90vdf3d5hc0z62rdb1jp9.rda masstagSCE.rda
           head -n 10 /github/home/Data/mibiSCE.rda
           head -n 10 /github/home/Data/masstagSCE.rda
           cat /github/home/Data/mibiSCE.rda
