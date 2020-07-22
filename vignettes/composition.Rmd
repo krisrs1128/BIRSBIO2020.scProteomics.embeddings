@@ -18,7 +18,20 @@ params:
       cell types, the cell density of the sample) from just the composition of
       cells that are present?
     - This is an interesting question because
-      + Cells are known to be
+      + Spatial properties are known to be predictive of certain disease
+        characteristics, and can now be directly interrogated using technology
+        like MIBI-ToF
+      + Cell type can be directly measured using cheaper masstag technologies
+
+* Our approach has two parts,
+  - FIrst we use MIBI-TOF spatial information to extract spatial features of interest
+  - We cluster the cells according to protein expression values
+  - We predict spatial properties based on proportions of cell clusters
+* Reason for clustering according to expression values is that we may want to
+  use a more granular collection of clusters than are available from prior
+  analysis / which are designed for human consumption.
+
+First, let's load the libraries needed in this vignette.
 
 ```{r}
 library("SummarizedExperiment")
@@ -33,6 +46,8 @@ library("BIRSBIO2020.scProteomics.embeddings")
 theme_set(theme_bw() + theme(panel.grid = element_blank()))
 ```
 
+Now we'll download data for analysis, if it's not already present.
+
 ```{r, message = FALSE, warning = FALSE}
 data_dir <- file.path(Sys.getenv("HOME"), "Data")
 data_paths <- download_data(data_dir)
@@ -43,19 +58,18 @@ mibi_sce <- subsample$exper
 ```
 
 * get cluster the proteins, and extract compositions from each sample
-* plot this against the tumor intrusion
-* now calculate my own spatial statistics.
-  - neighborhood entropy
-  - neighborhood size
-* relate summaries of these spatial statistics to composition
-  - if not totally predictive, then the latent idea is worthwhile
-  - otherwise, it's a surprise to the community
+* cell_clusters is the output of `kmeans` on the original protein expression
+  matrix, and mprops summarizes how many of each cluster each sample has
 
 ```{r}
 cell_clusters <- kmeans(t(assay(mibi_sce)), params$K)
 props <- sample_proportions(colData(mibi_sce)$SampleID, cell_clusters$cluster)
 mprops <- data.frame(props)
 ```
+
+Next, we join the cluster information into high-level sample information.
+cd_samp has colData summarized at the individual patient level, rather than one
+row for each cell.
 
 ```{r}
 cd <- colData(mibi_sce) %>%
@@ -85,7 +99,11 @@ ggplot(mprops %>% left_join(cd_samp)) +
   theme(legend.position = "bottom")
 ```
 
-Extract local entropy and neighborhood sizes.
+* Next we calculate spatial statistics using the raster data (appropriately
+  transformed into graphs).
+* Extract local entropy and neighborhood sizes.
+  - By local entropy, we mean the entropy of cluster proportion vectors within
+    each cell-centric neighborhood in the sample's graph
 
 ```{r spatial_stat, message = FALSE, warning = FALSE}
 sample_names <- as.character(cd_samp$SampleID)
@@ -113,6 +131,9 @@ for (i in seq_along(sample_names)) {
 }
 ```
 
+Now we join in these spatial statistics with the sample-level summaries we
+computed before.
+
 ```{r plot_spatial}
 spatial <- bind_rows(spatial, .id = "SampleID") %>%
   mutate(SampleID = factor(SampleID, levels(mprops$SampleID)))
@@ -136,6 +157,10 @@ spatial_cell <- spatial %>%
   ) %>%
   left_join(cd)
 ```
+
+These figures give us a sense of how the new spatial statistics are associated
+with known sample characteristics. For example, when entropy is large {something
+happens to the TIL score}.
 
 ```{r}
 ## overall histograms
@@ -162,9 +187,7 @@ slev <- spatial_samp %>%
   arrange(mdist) %>%
   .[["SampleID"]]
 
-ggplot(spatial_cell %>%
-       mutate(SampleID = factor(SampleID, levels = slev))
-       ) +
+ggplot(spatial_cell %>% mutate(SampleID = factor(SampleID, levels = slev))) +
   geom_point(
     aes(x = avg_dists, y = entropy, col = cell_group),
     size = 0.5, alpha = 0.8
@@ -177,6 +200,8 @@ ggplot(spatial_cell %>%
     panel.spacing = unit(0, "cm")
   )
 ```
+
+This is just more exploratory analysis of the derived spatial features.
 
 This is how each individual differs in terms of the cell-label entropy of and
 average pairwise distance of their 5-nearest neighborhoods.
@@ -227,6 +252,11 @@ ggplot(spatial_cell) +
   just the cell compositions?
 * Is there something about the survival that isn't captured entirely by the
   composition information?
+* First, we prepare covariates and response data. Our covariates are the
+  (square-root transformed) cluster mixture proportions associated with each
+  sample. Remember that these clusters are computed without reference to any
+  spatial information -- they are in principle recoverable from masstag
+  technologies alone.
 
 ```{r}
 spatial_samp <- spatial_samp %>%
@@ -242,6 +272,8 @@ x <- spatial_comp %>%
   as.matrix() %>%
   sqrt()
 ```
+
+As our first response, we'll consider the average cell-centric entropy.
 
 ```{r}
 y <- as.numeric(scale(spatial_comp$me))
@@ -289,6 +321,9 @@ have an explanation for how that could happen, though.
 
 # Interpreting Models
 
+Now that we have established {}, we want to dig a bit more deeply into how these
+fitted models are structured.
+
 ```{r}
 y <- as.numeric(scale(spatial_comp$me))
 fits <- fit_wrapper(x, y)
@@ -310,6 +345,8 @@ ggplot(mx) +
 y_order <- order(y)
 image(t(cbind(y[y_order] / 4, x[y_order, imp_ix[1:10] - 1])))
 ```
+
+It seems that....
 
 How can we interpret the associated clusters?
 
