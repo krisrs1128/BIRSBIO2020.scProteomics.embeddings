@@ -10,6 +10,16 @@ params:
   K: 20
 ---
 
+* Question we answer in this vignette: to what extent can spatial features from
+  MIBI-ToF data be identified from the composition of cells.
+* More direct question: We know that if a sample has only one cell type, then it
+  cannot have mixing. We want to push this thinking further.
+    - Can you determine spatial properties (like the amount of mixing between
+      cell types, the cell density of the sample) from just the composition of
+      cells that are present?
+    - This is an interesting question because
+      + Cells are known to be
+
 ```{r}
 library("SummarizedExperiment")
 library("dplyr")
