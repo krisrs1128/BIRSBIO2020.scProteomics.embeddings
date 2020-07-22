@@ -34,6 +34,10 @@ jobs:
           ls
           unzip -v 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
           ls
+          echo $HOME
+          export HOME=/home/rstudio
+          echo $HOME
+          ls /home/rstudio/
 
       - name: Cache R packages
         if: runner.os != 'Windows'
@@ -60,6 +64,7 @@ jobs:
           apt-get install -y libpython3.7-dev
           apt-get install -y python3-pip
           apt-get install -y python3-venv python3-virtualenv
+          echo $HOME
       
       - name: Install dependencies
         run: |
