@@ -21,7 +21,7 @@ imports:
     forcats,
     ggplot2,
     glmnet,
-    htmlwidgets
+    htmlwidgets,
     igraph,
     keras,
     pracma,
