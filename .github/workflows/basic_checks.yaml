@@ -33,12 +33,9 @@ jobs:
           url: "https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip"
           target: /home/rstudio/Data/TNBC_shareCellData/tnbc.zip
           
-      - name: Unzip TNBC data
-        run: |
-            ls /home/
-            cd /home/rstudio/Data/TNBC_shareCellData/
-            ls
-            unzip tnbc.zip
+      - uses: montudor/action-zip@v0.1.0
+        with:
+          args: unzip -qq /home/rstudio/Data/TNBC_shareCellData/tnbc.zip
 
       - name: Cache R packages
         if: runner.os != 'Windows'
