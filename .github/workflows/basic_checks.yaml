@@ -28,11 +28,9 @@ jobs:
 
       - name: Downloading rasters
         run: |
-          mkdir -p /github/home/Data/TNBC_shareCellData/
-          cd /github/home/Data/TNBC_shareCellData/
-          wget https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
-          unzip 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip &> /dev/null
-          ls
+          cd /github/home/Data/
+          wget https://uwmadison.box.com/shared/static/ojzwxpcl5ujjbm6hzuwqi80crvaef73p.gz
+          tar -zxvf ojzwxpcl5ujjbm6hzuwqi80crvaef73p.gz
 
       - name: Move downloads
         run: |
