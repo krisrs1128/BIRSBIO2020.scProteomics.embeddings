@@ -36,12 +36,10 @@ jobs:
       - name: Unzip TNBC data
         run: |
             ls /home/
-            ls /home/rstudio/Data/
-            ls /home/rstudio/Data/TNBC_shareCellData/
-            unzip /home/rstudio/Data/TNBC_shareCellData/tnbc.zip
+            cd /home/rstudio/Data/TNBC_shareCellData/
+            ls
+            unzip tnbc.zip
 
-            unzip /home/rstudio/Data/TNBC_shareCellData/tnbc.zip
-        
       - name: Cache R packages
         if: runner.os != 'Windows'
         uses: actions/cache@v1
