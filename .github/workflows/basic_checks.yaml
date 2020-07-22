@@ -31,7 +31,7 @@ jobs:
           mkdir -p /github/home/Data/TNBC_shareCellData/
           cd /github/home/Data/TNBC_shareCellData/
           wget https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
-          unzip 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip || \ ( e=$? && if [ $e -ne 11 ]; then exit $e; fi )
+          unzip 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip &> /dev/null
           ls
 
       - name: Move downloads
