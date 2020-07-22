@@ -8,7 +8,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r}
+```{r, eval=F}
 library("dplyr")
 library("geojsonio")
 library("raster")
@@ -18,7 +18,7 @@ library("umap")
 library("BIRSBIO2020.scProteomics.embeddings")
 ```
 
-```{r}
+```{r, eval=F}
 data_dir <- file.path(Sys.getenv("HOME"), "Data")
 download_data(data_dir)
 loaded_ <- load_mibi(data_dir)
@@ -28,7 +28,7 @@ cell_full <- read_csv(file.path(data_dir,  "TNBC_shareCellData", "cellData.csv")
 Here's a helper that will prepare the U-Map projection and polygon data for our
 downstream plot.
 
-```{r}
+```{r, eval=F}
 input_data <- function(cell_full, tiff_paths, sample_id, crop_size=1000, simplify=0.4) {
   # read the associated raster
   im <- raster(tiff_paths[grepl(paste0("p", sample_id, "_"), tiff_paths)])
@@ -67,7 +67,7 @@ input_data <- function(cell_full, tiff_paths, sample_id, crop_size=1000, simplif
 Now we can make this figure for as many patients as we want.
 
 
-```{r, warning=F, message=F}
+```{r, eval=F, warning=F, message=F}
 data_ <- list()
 for (i in seq_len(6)) {
   data_[[i]] <- input_data(cell_full, loaded_$tiffs, i)

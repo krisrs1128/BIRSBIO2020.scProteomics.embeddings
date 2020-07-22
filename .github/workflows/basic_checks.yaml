@@ -28,6 +28,8 @@ jobs:
 
       - name: Downloading rasters
         run: |
+          ls /github/home/Data/
+          head -n 10 /github/home/Data/mibiSCE.rda
           mkdir -p /github/home/Data/TNBC_shareCellData/
           cd /github/home/Data/TNBC_shareCellData/
           wget https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
@@ -66,6 +68,11 @@ jobs:
           remotes::install_deps(dependencies = TRUE, repos = BiocManager::repositories())
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
+
+      - name: Looking at downloads
+        run: |
+          ls /github/home/Data/
+          head -n 10 /github/home/Data/mibiSCE.rda
 
       - name: Check
         env:
