@@ -26,13 +26,14 @@ jobs:
           url: "https://srv-file19.gofile.io/download/YSa24g/masstagSCE.rda"
           target: /home/rstudio/Data/
 
-      - name: Install system dependencies
+      - name: Downloading rasters
         run: |
           mkdir /home/rstudio/Data/TNBC_shareCellData/
           cd /home/rstudio/Data/TNBC_shareCellData/
           wget https://ff46df02-0fce-4001-88ae-41336ee05310.filesusr.com/archives/302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
           ls
-          unzip TNBC_shareCellData.zip
+          unzip 302cbc_72cbeda2c99342c0a1b3940d6bac144f.zip?dn=TNBC_shareCellData.zip
+          ls
 
       - name: Cache R packages
         if: runner.os != 'Windows'
