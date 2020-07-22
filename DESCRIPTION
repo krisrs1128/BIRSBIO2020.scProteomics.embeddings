@@ -26,6 +26,7 @@ imports:
     readr,
     reshape2,
     reticulate,
+    rgdal,
     tensorflow,
     tidyr,
     viridis
