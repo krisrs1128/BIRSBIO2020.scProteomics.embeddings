@@ -10,50 +10,28 @@ params:
   qsize: 100 # size of image quadrant we subset to
   max_rank: 2000 # rank at which we start thresholding
   cluster_K: 20 # number of clusters in the umap layout space
+  max_samples: 10 # number of samples to run on
 ---
 
-_Goal_: Map mass-spec measurements to plausible spatial expression patterns, based
-on MIBI-  scale_y_continuous(limits = c(-15, 5)) +
-  scale_x_continuous(limits = c(-15, 17)) +
-ToF measurements, and provide some sense of uncertainty in the estimate.
 
-_Outline_:
+* In `composition.rmd` we ask whether it's possible to recover sample-level
+  spatial features from protein expression measurements
+* We ask a more challenging question here, looking for whether it's possible to
+  identify spatial features associated with individual cells, just from the
+  expression measurements 
+* Understandably more far fetched, but there are some reasons it could happen --
+  maybe when an immune cell is surrounded by cancer cells, it has a different
+  protein expression pattern than when it is surrounded by other immune cells
+* Again, motivation is that spatial characteristics of cells are interesting,
+  but it's easier to use technologies that only interrogate expression
+  information
 
-* For MIBI data, derive cell-level embeddings, based both on the cells' antigen
-  expression levels and local spatial ecosystem.
-    - This is the part of the analysis that is the most open-ended -- there are
-    many ways to build embeddings from either quantitative matrices or images /
-    graphs, and we also have to decide how to combine them.
-    - We'll start with something simple: U-Map on quantitative and derived
-    spatial features, with a parameter trading off the relative weights of the
-    two tables.
-    - Would be very interesting to try image (autoencoder) or graph (graph nn)
-    features.
-* Summarize MIBI samples based on these cell-level features. The idea is to
-  cluster the embeddings and summarize a sample based on the fraction of cells
-  that belong to each cluster.
-* Relate mass-spec and MIBI measurements by learning a mapping from common
-  features (9 shared antigens and overlapping patient characteristics) to the
-  location on the embedding.
-  - Our predicted spatial expression for a cytof sample is the spatial
-    expression pattern associated with that region in the predicted embedding
-    space.
-  - We can gauge our ability to actually perform spatial expression imputation
-    by (1) our prediction ability, from test mibitof samples to their true
-    embeddings, and (2) a proportion-of-variance like quantity on the
-    original embeddings[^1].
+One theme between this vignette and `composition.Rmd` is that the notion of a
+sampling unit is not so straightforwards in this analysis -- we can reasonably
+analyze the data at several levels of resolution. This vignette considers the
+cell-resolution analog of the sample-level questions in that vignette.
 
-_Themes_:
-
-* Try assembling easily re-usable components, and understanding their behavior
-  when combined. This seems more broadly useful than trying to come up with a
-  single model that cannot be reused elsewhere.
-* The notion of a "sampling unit" is hierarchical (at least, it's not clear
-  cut). We need to think of sampling and variation at both the patient and
-  cellular level.
-* The dichotomy between ML and stats is artificial, especially in applications
-  like this, which are heavy in both non-tabular data and scientific questions.
-  Liberally use methods from both disciplines.
+Without further delay, these are the packages we use in this analysis.
 
 ```{r}
 library("SummarizedExperiment")
@@ -73,35 +51,25 @@ library("BIRSBIO2020.scProteomics.embeddings")
 theme_set(theme_bw() + theme(panel.grid=element_blank()))
 ```
 
-Loading data...
+We download the data if it's not already present. We're filtering to just 10
+samples in this run, since it lets the vignette run faster. But to train the
+complete model, replace the `params$max_sample` with 41 (the number of raster
+files we have).
 
 ```{r}
 data_dir <- file.path(Sys.getenv("HOME"), "Data")
 get(load(file.path(data_dir, "mibiSCE.rda")))
 download_data(data_dir)
-loaded_ <- load_mibi(data_dir, 10)
+loaded_ <- load_mibi(data_dir, params$max_samples)
 ```
-
-Now, we'll start implementing the outline proposed above, using simplest
-components that we can find. We'll improve the parts that seem especially weak
-in the second pass.
-
-Also for the sake of simplicity, we'll work on subsamples of cells. We won't
-randomly sample though, since that would lose interesting spatial variation --
-instead we'll extract small quadrants from the full images.
-
-# Subsampling
-
-We'll loop over all the tiffs and extract the `r params$qsize` $\times$
-`r params$qsize` top left quadrant from each image.
+We'll loop over all the tiffs and extract the `r params$qsize` $\times$ `r params$qsize` 
+top-left quadrant from each image, also to speed up computation in these experiments.
 
 ```{r}
 subsample <- spatial_subsample(loaded_$tiffs, loaded_$mibi)
 ims <- subsample$ims
 mibi_sce <- subsample$exper
 ```
-
-# Embeddings
 
 Now, let's extract some features on which to perform the joint embedding. We'll
 transform and reweight the columns, to make the two sets of features more
