@@ -55,22 +55,22 @@ _Themes_:
   like this, which are heavy in both non-tabular data and scientific questions.
   Liberally use methods from both disciplines.
 
-```{r, eval=F}
-## library("SummarizedExperiment")
-## library("dplyr")
-## library("forcats")
-## library("ggplot2")
-## library("keras")
-## library("raster")
-## library("reshape2")
-## library("stars")
-## library("stringr")
-## library("tibble")
-## library("tidyr")
-## library("umap")
-## library("viridis")
-## library("BIRSBIO2020.scProteomics.embeddings")
-## theme_set(theme_bw() + theme(panel.grid=element_blank()))
+```{r}
+library("SummarizedExperiment")
+library("dplyr")
+library("forcats")
+library("ggplot2")
+library("keras")
+library("raster")
+library("reshape2")
+library("stars")
+library("stringr")
+library("tibble")
+library("tidyr")
+library("umap")
+library("viridis")
+library("BIRSBIO2020.scProteomics.embeddings")
+theme_set(theme_bw() + theme(panel.grid=element_blank()))
 ```
 
 Loading data...
@@ -78,8 +78,8 @@ Loading data...
 ```{r}
 data_dir <- file.path(Sys.getenv("HOME"), "Data")
 get(load(file.path(data_dir, "mibiSCE.rda")))
-## download_data(data_dir)
-## loaded_ <- load_mibi(data_dir, 10)
+download_data(data_dir)
+loaded_ <- load_mibi(data_dir, 10)
 ```
 
 Now, we'll start implementing the outline proposed above, using simplest
@@ -95,7 +95,7 @@ instead we'll extract small quadrants from the full images.
 We'll loop over all the tiffs and extract the `r params$qsize` $\times$
 `r params$qsize` top left quadrant from each image.
 
-```{r, eval=F}
+```{r}
 subsample <- spatial_subsample(loaded_$tiffs, loaded_$mibi)
 ims <- subsample$ims
 mibi_sce <- subsample$exper
@@ -108,7 +108,7 @@ transform and reweight the columns, to make the two sets of features more
 comparable. First, for transformation, we'll convert antigen expression values
 to ranks and then threshold.
 
-```{r, eval=F transformation, message=TRUE}
+```{r, message=TRUE}
 x <- t(assay(mibi_sce))
 x_order <- hclust(dist(t(x)))$order
 pairs(x[, x_order[1:6]], col = rgb(0, 0, 0, 0.5), cex=0.1)
@@ -118,7 +118,7 @@ Next, we'll extract some features from the spatial data. Note that some cells
 seem to appear in the raster but not in the `colData`. This seems weird, and is
 worth looking into, but for now I'm going to just innerJoin to ignore that.
 
-```{r, eval=F graph_stats}
+```{r graph_stats}
 # polygonize each raster
 col_df <- as.data.frame(colData(mibi_sce)) %>%
   mutate(
@@ -182,7 +182,7 @@ plot(graph_stats$`Keratin-positive tumor`, graph_stats$`graph_neighbors_Keratin-
 
 Now, we'll standardize these features and learn some embeddings.
 
-```{r, eval=F}
+```{r}
 # standardize features between the two tables
 x <- t(assay(mibi_sce)) %>%
   as_tibble()
@@ -218,7 +218,7 @@ embeddings_df <- embeddings$layout %>%
 
 We'll plot the embeddings we just made, against some of the derived features.
 
-```{r, eval=F}
+```{r}
 ggplot(embeddings_df) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
@@ -256,7 +256,7 @@ Now that we have embeddings at the cell level, we can try to summarize samples
 by how many of their cells lie in different regions of the embedding space.
 First, we'll cluster using an arbitrary $K$.
 
-```{r, eval=F}
+```{r}
 clusters <- kmeans(embeddings$layout, centers = params$cluster_K)
 
 # plot the clusters
@@ -310,7 +310,7 @@ To answer this, let's compare samples 23, 27, 2 with 10 and 12. These samples
 seem to have pretty different cluster compositions, even though they both lie in
 the grade 3 group.
 
-```{r, eval=F}
+```{r}
 polys_q <- polys_df %>%
   filter(SampleID %in% c("23", "27", "2", "10", "12")) %>%
   mutate(compare = ifelse(SampleID %in% c("10", "12"), "group2", "group1"))
@@ -327,7 +327,7 @@ of empty space, but at least the first three do seem qualitatively similar.
 In fact, we can compare many of the spatial images, based on the ordering we
 just defined.
 
-```{r, eval=F}
+```{r}
 cluster_props_wide <- cluster_props %>%
   dcast(SampleID ~ cluster, value.var = "prop", fill = 0)
 
@@ -364,7 +364,7 @@ We'll finally load the cytof data to identify shared features. Then, we'll look
 at the relationship between those features and the above embeddings, to see if
 we could map the cytof data into the mibitof embedding space.
 
-```{r, eval=F}
+```{r}
 load(file.path(data_dir, "masstagSCE.rda"))
 masstag <- data_list("sce")
 common_antigens <- intersect(rownames(masstag$tcell.sce), rownames(mibi_sce))
@@ -380,7 +380,7 @@ spatial characteristics of the sample.
 This prepares the training data, which maps antigen values and cell type
 indicators to embedding locations.
 
-```{r, eval=F}
+```{r}
 predictors <- x %>%
   left_join(
     y %>%
@@ -402,7 +402,7 @@ model %>%
   fit(pred_mat, response, epochs=200, batch_size=1024)
 ```
 
-```{r, eval=F}
+```{r}
 y_hat <- predict(model, pred_mat)
 plot(response, cex=0.1, col = rgb(0, 0, 0, 0.1))
 points(y_hat, cex=0.1, col = rgb(1, 0, 0, 0.1))
@@ -420,7 +420,7 @@ to the real (known, for the MIBI-ToF data) compositions.
 We can compare this with what the predictions would have been if we had used all
 the antigens (but no explicit spatial information).
 
-```{r, eval=F}
+```{r}
 pred_mat <- predictors %>%
   dplyr::select(-sample_by_cell) %>%
   as.matrix()
@@ -430,7 +430,7 @@ model %>%
   fit(pred_mat, response, epochs=200, batch_size=1024)
 ```
 
-```{r, eval=F}
+```{r}
 y_hat <- predict(model, pred_mat)
 plot(response, cex=0.1, col = rgb(0, 0, 0, 0.1))
 points(y_hat, cex=0.1, col = rgb(1, 0, 0, 0.1))

@@ -24,7 +24,7 @@ directly at those questions,
   statistics from local neighborhoods, like the proportion of the local
   neighborhood that's background.
 
-```{r, eval=F}
+```{r}
 library("dplyr")
 library("ggplot2")
 library("igraph")
@@ -42,7 +42,7 @@ theme_set(theme_bw() + theme(panel.grid=element_blank()))
 First, we'll download all the data, if they're not already present in the
 `$HOME/Data` folder.
 
-```{r, eval=F}
+```{r}
 # if data folder doesn't exist, download and unzip
 data_paths <- download_data(file.path(Sys.getenv("HOME"), "Data"))
 sample_id <- params$sample_id
@@ -57,7 +57,7 @@ It can be helpful to work directly with polygon geometries, rather than the
 original raster image. You can then use any logic you'd have used for
 manipulating geographic shapefiles, for example.
 
-```{r, eval=F}
+```{r}
 polys <- st_as_stars(im) %>%
   st_as_sf(merge = TRUE) %>%
   st_cast("POLYGON")
@@ -67,7 +67,7 @@ colnames(polys)[1] <- "cellLabelInImage"
 This will join polygons that are neighbors. Notice that there is a thin border
 between cells, so we'll ignore that using the `snap` argument in `poly2nb`.
 
-```{r, eval=F}
+```{r}
 cell_data <- read_csv(file.path(data_paths[[3]], "cellData.csv")) %>%
   filter(SampleID == sample_id)
 
@@ -82,7 +82,7 @@ polys <- polys %>%
 With these shapefiles, we can use geographic plotting tools. For example, this
 plots the immune group for each geometry.
 
-```{r, eval=F}
+```{r}
 ggplot(polys) +
   geom_sf(aes(fill=as.factor(immuneGroup))) +
   scale_x_continuous(expand = c(0, 0)) +
@@ -97,7 +97,7 @@ their connectivity / mixing structure. In the plot below, nodes are located at
 the original cell positions, and contiguity and knn edges are blue and red,
 respectively.
 
-```{r, eval=F}
+```{r}
 nb_contig <- poly2nb(polys, snap=1)
 coords <- polys %>%
   .[["geometry"]] %>%
@@ -113,7 +113,7 @@ plot(nb_contig, coords, add=T, col="#97293f")
 We can turn this into a more familiar `igraph` object, for access to the usual
 graph manipulation routines.
 
-```{r, eval=F}
+```{r}
 G <- extract_graph(polys)
 plot(G, vertex.size=3, edge.arrow.size=0, vertex.label=NA)
 ```
@@ -129,7 +129,7 @@ of immune group within a window around that cell. This can be used to define a
 localized cell heterogeneity, for use in downstream analysis. We plot each of
 the image subwindows surrounding a single cell.
 
-```{r, eval=F}
+```{r}
 #' How dense are cells, relative to background?
 cell_ids <- unique(polys$cellLabelInImage)
 loop_stats(cell_ids[1:10], "raster", im, polys, background_prop)
@@ -140,6 +140,6 @@ loop_stats(cell_ids[1:10], "raster", im, polys, background_prop)
 Alternatively, we could ignore the spatial information entirely, and summarize
 cells according to the properties of their neighbors.
 
-```{r, eval=F}
+```{r}
 loop_stats(cell_ids[1:10], "graph", G, polys, background_prop)
 ```
