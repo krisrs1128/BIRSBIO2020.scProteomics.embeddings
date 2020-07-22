@@ -143,16 +143,18 @@ cell_type <- function(exper) {
 #' @param fun A function that can be applied to a data.frame whose rows are
 #'   pixels and whose columns give features of those pixels (e.g., immune
 #'   group).
+#' @importFrom igraph neighbors
+#' @importFrom dplyr filter group_map mutate select everything
 #' @return result A tibble mapping the cell to statistics calculated by fun.
 graph_stats_cell <- function(cell_id, G, polys, fun, ...) {
-  ball <- igraph::neighbors(G, as.character(cell_id))
+  ball <- neighbors(G, as.character(cell_id))
   cell_stats <- polys %>%
-    dplyr::filter(cellLabelInImage %in% names(ball)) %>%
-    dplyr:::group_map(fun)
+    filter(cellLabelInImage %in% names(ball)) %>%
+    group_map(fun)
 
   cell_stats[[1]] %>%
-    dplyr::mutate(cellLabelInImage = cell_id) %>%
-    dplyr::select(cellLabelInImage, everything())
+    mutate(cellLabelInImage = cell_id) %>%
+    select(cellLabelInImage, everything())
 }
 
 #' Extract a KNN Graph from Polygons
@@ -161,13 +163,17 @@ graph_stats_cell <- function(cell_id, G, polys, fun, ...) {
 #' @param geometries The data.frame containing the polygons and their labels.
 #' @param K The number of nearest neighbors to which each polygon will be
 #'   linked.
+#' @importFrom spdep knn2nb knearneigh
+#' @importFrom sf st_centroid
+#' @importFrom pracma distmat
+#' @importFrom igraph graph_from_data_frame
+#' @importFrom dplyr bind_rows
 #' @export
 extract_graph <- function(geometries, K = 5) {
-  nb <- spdep::knn2nb(
-    spdep::knearneigh(sf::st_centroid(geometries), K)
+  nb <- knn2nb(knearneigh(st_centroid(geometries), K)
   )
   labels <- unique(geometries$cellLabelInImage)
-  dists <- sapply(geometries$geometry, sf::st_centroid) %>%
+  dists <- sapply(geometries$geometry, st_centroid) %>%
     t()
 
   relations_data <- list()
@@ -177,14 +183,14 @@ extract_graph <- function(geometries, K = 5) {
       to = labels[nb[[i]]]
     )
 
-    relations_data[[i]]$dist <- pracma::distmat(
+    relations_data[[i]]$dist <- distmat(
       dists[i, ], dists[nb[[i]], ]
     ) %>%
       as.numeric()
   }
 
   relations_data <- bind_rows(relations_data)
-  igraph::graph_from_data_frame(relations_data, labels)
+  graph_from_data_frame(relations_data, labels)
 }
 
 #' Apply fun to Local Neighborhoods
@@ -202,27 +208,32 @@ extract_graph <- function(geometries, K = 5) {
 #' @param plot_masks If you want to see what the subsets of cells looks like,
 #'   you can use this.
 #' @return result A tibble mapping the cell to statistics calculated by fun.
+#' @importFrom dplyr filter select left_join group_map mutate everything
+#' @importFrom raster mask as.matrix
+#' @importFrom reshape2 melt
+#' @importFrom sf st_centroid st_buffer as_Spatial
+#' @importFrom sp plot
 raster_stats_cell <- function(cell_id, im, polys, fun, buffer_radius=90,
                               plot_masks=TRUE) {
   sub_poly <- polys %>%
-    dplyr::filter(cellLabelInImage == cell_id) %>%
-    dplyr::select(geometry) %>%
-    sf::st_centroid() %>%
-    sf::st_buffer(dist = buffer_radius)
+    filter(cellLabelInImage == cell_id) %>%
+    select(geometry) %>%
+    st_centroid() %>%
+    st_buffer(dist = buffer_radius)
 
-  im_ <- raster::mask(im, sf::as_Spatial(sub_poly))
+  im_ <- mask(im, as_Spatial(sub_poly))
   if (plot_masks) {
-    sp::plot(im_)
+    plot(im_)
   }
 
-  melted_im <- raster::as.matrix(im_) %>%
-    reshape2::melt(na.rm = TRUE, value.name = "cellLabelInImage") %>%
-    dplyr::left_join(polys, by = "cellLabelInImage") %>%
-    dplyr::group_map(fun)
+  melted_im <- as.matrix(im_) %>%
+    melt(na.rm = TRUE, value.name = "cellLabelInImage") %>%
+    left_join(polys, by = "cellLabelInImage") %>%
+    group_map(fun)
 
   melted_im[[1]] %>%
-    dplyr::mutate(cellLabelInImage = cell_id) %>%
-    dplyr::select(cellLabelInImage, dplyr::everything())
+    mutate(cellLabelInImage = cell_id) %>%
+    select(cellLabelInImage, everything())
 }
 
 #' Wrapper for Local Statistics
@@ -232,6 +243,7 @@ raster_stats_cell <- function(cell_id, im, polys, fun, buffer_radius=90,
 #' @param cell_ids A vector of cell IDs on which to apply a function to
 #' @param type Either "raster" or "graph". Specifies the types of neighborhoods
 #'   (image or graph) on which to compute statistics.
+#' @importFrom dplyr bind_rows
 #' @export
 loop_stats <- function(cell_ids, type="raster", ...) {
   cell_fun <- ifelse(type == "raster", raster_stats_cell, graph_stats_cell)
@@ -241,7 +253,7 @@ loop_stats <- function(cell_ids, type="raster", ...) {
     result[[i]] <- cell_fun(cell_ids[i], ...)
   }
 
-  dplyr::bind_rows(result)
+  bind_rows(result)
 }
 
 #' Multitask Regression Model
@@ -303,25 +315,29 @@ load_mibi <- function(data_dir, n_paths = NULL) {
 #' @param exper A summarized experiment object, containing measurements for each
 #'   cell.
 #' @param qsize How large should the rasters be?
+#' @importFrom dplyr rename select
+#' @importFrom raster raster crop extent unique
+#' @importFrom stringr str_extract
+#' @importFrom tidyr unite
 #' @export
 spatial_subsample <- function(tiff_paths, exper, qsize=500) {
   ims <- list()
   for (i in seq_along(tiff_paths)) {
     print(paste0("cropping ", i, "/", length(tiff_paths)))
-    r <- raster::raster(tiff_paths[[i]])
-    ims[[i]] <- raster::crop(r, raster::extent(1, qsize, 1, qsize))
+    r <- raster(tiff_paths[[i]])
+    ims[[i]] <- crop(r, extent(1, qsize, 1, qsize))
   }
 
-  names(ims) <- stringr::str_extract(tiff_paths, "[0-9]+")
-  cur_cells <- sapply(ims, raster::unique) %>%
+  names(ims) <- str_extract(tiff_paths, "[0-9]+")
+  cur_cells <- sapply(ims, unique) %>%
     melt() %>%
-    dplyr::rename(cellLabelInImage = "value", SampleID = "L1") %>%
-    tidyr::unite(sample_by_cell, SampleID, cellLabelInImage, remove = F)
+    rename(cellLabelInImage = "value", SampleID = "L1") %>%
+    unite(sample_by_cell, SampleID, cellLabelInImage, remove = F)
 
   scell <- colData(exper) %>%
     as.data.frame() %>%
-    dplyr::select(SampleID, cellLabelInImage) %>%
-    tidyr::unite(sample_by_cell, SampleID, cellLabelInImage) %>%
+    select(SampleID, cellLabelInImage) %>%
+    unite(sample_by_cell, SampleID, cellLabelInImage) %>%
     .[["sample_by_cell"]]
 
   list(
@@ -347,17 +363,18 @@ sample_proportions <- function(SampleID, cluster) {
 #'
 #' @param G A graph whose subgraphs we want to find.
 #' @param order The size of the subgraphs.
+#' @importFrom igraph ego induced_subgraph
 #' @export
 subgraphs <- function(G, order = 3) {
   ids <- V(G)
   SG <- list()
+
   for (i in seq_along(ids)) {
-    ball <- do.call(c, igraph::ego(G, ids[[i]], order = order))
-    SG[[i]] <- igraph::induced_subgraph(G, ball)
-
+    ball <- do.call(c, ego(G, ids[[i]], order = order))
+    SG[[i]] <- induced_subgraph(G, ball)
   }
-  names(SG) <- ids
 
+  names(SG) <- ids
   SG
 }
 
@@ -409,9 +426,9 @@ plot_fits <- function(x, y, glmnet_fit, rf_fit) {
 #' @importFrom glmnet cv.glmnet
 #' @export
 fit_wrapper <- function(x, y) {
-  glmnet_fit <- glmnet::cv.glmnet(x, y)
+  glmnet_fit <- cv.glmnet(x, y)
   plot(glmnet_fit)
-  rf_fit <- caret::train(x, y)
+  rf_fit <- train(x, y)
   print(rf_fit)
   list(rf = rf_fit, glmnet = glmnet_fit)
 }
