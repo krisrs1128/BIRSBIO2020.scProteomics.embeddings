@@ -29,8 +29,9 @@ jobs:
       - name: Look at downloads
         run: |
           cd /github/home/Data/
+          ls
           mv yl667qrpgr53l9iw7t1bmnmlk6v99n4o.rda mibiSCE.rda
-          mv hcb7i89v5xn90vdf3d5hc0z62rdb1jp9.rda masstagSCE.rda
+          mv hcb7i89v5xn90vdf3d5hc0z62rdb1jp9.rda3 masstagSCE.rda
           head -n 10 /github/home/Data/mibiSCE.rda
           head -n 10 /github/home/Data/masstagSCE.rda
           cat /github/home/Data/mibiSCE.rda
