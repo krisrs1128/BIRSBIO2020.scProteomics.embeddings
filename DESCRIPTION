@@ -14,39 +14,39 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 imports:
-    caret,
-    geojsonio,
-    glmnet,
-    htmltools,
-    htmlwidgets,
-    keras,
-    pracma,
-    randomForest,
-    randomForestSRC,
-    readr,
-    reshape2,
-    reticulate,
-    tensorflow,
-    tidyr,
-    viridis
+    # caret,
+    # geojsonio,
+    # glmnet,
+    # htmltools,
+    # htmlwidgets,
+    # keras,
+    # pracma,
+    # randomForest,
+    # randomForestSRC,
+    # readr,
+    # reshape2,
+    # reticulate,
+    # tensorflow,
+    # tidyr,
+    # viridis
 Depends:
     SingleCellExperiment,
     SummarizedExperiment,
-    dplyr,
-    forcats,
-    ggplot2,
-    igraph,
-    raster,
-    scales,
-    sf,
-    spdep,
-    stars,
-    umap
+    # dplyr,
+    # forcats,
+    # ggplot2,
+    # igraph,
+    # raster,
+    # scales,
+    # sf,
+    # spdep,
+    # stars,
+    # umap
 Suggests: 
-    knitr,
+    # knitr,
     rmarkdown,
     pkgdown,
-    rmapshaper
+    # rmapshaper
 URL: https://krisrs1128.github.io/BIRSBIO2020.scProteomics.embeddings
 VignetteBuilder: knitr
 DockerImage: krisrs1128/birs2020:latest
