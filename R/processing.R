@@ -14,7 +14,7 @@ globalVariables(c(
   "n_polys",
   "sample_by_cell",
   "sample_id",
-  "tumor_group",
+  "tumor_group"
 ))
 
 #' Download Data for Experiments
@@ -381,7 +381,7 @@ sample_proportions <- function(SampleID, cluster) {
 #' @importFrom igraph ego induced_subgraph V
 #' @export
 subgraphs <- function(G, order = 3) {
-  ids <- V(G)
+  ids <- igraph::V(G)
   SG <- list()
 
   for (i in seq_along(ids)) {
@@ -405,7 +405,7 @@ subgraphs <- function(G, order = 3) {
 entropies <- function(G, clusters_) {
   ents <- list()
   for (g in seq_along(G)) {
-    counts <- table(clusters_[names(V(G[[g]]))])
+    counts <- table(clusters_[names(igraph::V(G[[g]]))])
     fq <- counts / sum(counts)
     ents[[g]] <- -sum(fq * log(fq))
   }
