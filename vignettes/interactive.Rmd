@@ -1,0 +1,121 @@
+---
+title: "Interactive Visualization using Linked Views"
+author: Kris Sankaran^[ksankaran@wisc.edu]
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Interactive Visualization using Linked Views}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+* purpose is to highlight an approach to spatial expression analysis using ideas
+  from interactive visualization
+* high-level idea: both interactive and direct visualization give us something
+  like maps. We want to be able to inspect them simultaneously.
+* We want to generate these interactive views in demand, so we wrap the core
+  visualization code in an htmlwidgets package (https://www.htmlwidgets.org/).
+
+
+* First, we"ll install some packages needed to prepare the data and run the
+analysis.
+* We use spatial data analysis packages to prepare the geojson which ends up as
+  input to our visualization
+
+```{r}
+library("dplyr")
+library("geojsonio")
+library("raster")
+library("readr")
+library("rmapshaper")
+library("umap")
+library("BIRSBIO2020.scProteomics.embeddings")
+```
+
+* Next, we load the MIBI-ToF data or download it, if it's not available.
+
+```{r}
+data_dir <- file.path(Sys.getenv("HOME"), "Data")
+download_data(data_dir)
+loaded_ <- load_mibi(data_dir)
+cell_full <- read_csv(file.path(data_dir,  "TNBC_shareCellData", "cellData.csv"))
+```
+
+* Our visualizations are going to be made on a patient by patient basis.
+* In principle, a similar approach should work while looking at many patients simultaneously
+  - We can still make a u-map on all patients
+  - But we'd need to layout the spatial data so that many patients can be
+    displayed next to one another.
+  - Would also be better to group the panels for patients, so that patients with
+    more similar prognosis are placed nearer to one another
+
+* Since we'll focus on one patient at a time, we'll want to re-use the data
+  preparation code
+* This is encapsulated in the function below. The input are the full protein
+  expression data, paths to all the TIFFs, and the desired patient to display.
+* The output are a dataframe giving the coordinates of each cell, according to a
+  u-map, and a geojson of the cells
+  - We simplify the geojson to make interaction smoother.
+  - We also crop the rasters, so that preprocessing is faster (and so we can
+    display more patients in an rmarkdown without requiring too much time to
+    compile)
+
+```{r}
+input_data <- function(cell_full, tiff_paths, sample_id, crop_size=1000, simplify=0.4) {
+  # read the associated raster
+  im <- raster(tiff_paths[grepl(paste0("p", sample_id, "_"), tiff_paths)])
+  im <- crop(im, extent(im, 0, crop_size, 0, crop_size)) # comment out to work on full data
+  polys <- polygonize(im) %>%
+    filter(!(cellLabelInImage %in% c(0, 1)))
+
+  # filter down to relevant data
+  cell_data <- cell_full %>%
+    filter(
+      SampleID == sample_id,
+      cellLabelInImage %in% polys$cellLabelInImage
+    )
+
+  polys <- polys %>%
+    left_join(cell_data)
+
+  # run U-Map on channel data
+  channels <- setdiff(colnames(cell_data), c("cellLabelInImage", "SampleID", "cellSize", "Background", "tumorYN", "cell_cluster", "tumorCluster", "Group", "immuneCluster", "immuneGroup"))
+  dimred <- umap(cell_data[, channels]) %>%
+    .[["layout"]] %>%
+    data.frame() %>%
+    rename(V1 = X1, V2 = X2)
+  dimred <- cbind(cell_data, dimred)
+
+  # convert to geojson
+  geo_polys <- geojson_json(polys) %>%
+    geojson_sp() %>%
+    ms_simplify(keep = simplify) %>%
+    geojson_json()
+
+  list("dimred" = dimred, "polys" = geo_polys)
+}
+```
+
+* Below are the results.
+* Each side by side panel is a subset of cells from one region of the sample
+  from a single patient.
+* How to read the tool: left hand side are the cells, as they appear in the MIBI
+  ToF data. They are shaded in by their cell type.
+    - html`The tumor clusters (from the original rda object) are <span style="background:#d9d9d9">4</span>, <span style="background:#bc80bd">7</span>, <span style="background:#ccebc5">10</span>, <span style="background:#ffed6f">17</span>.`
+    - html`The immune clusters are <span style="background:#8dd3c7">1</span>, <span style="background:#ffffb3">2</span>, <span style="background:#bebada">3</span>, <span style="background:#fb8072">4</span>, <span style="background:#80b1d3">8</span>, <span style="background:#fdb462">10</span>, <span style="background:#b3de69">11</span>, <span style="background:#fccde5">12</span>.`
+* How to use the tool: Draw a brush over one panel to highlight the
+  corresponding cells in the other
+
+
+```{r, warning=F, message=F}
+data_ <- list()
+for (i in seq_len(6)) {
+  data_[[i]] <- input_data(cell_full, loaded_$tiffs, i)
+}
+
+linked_views(data_[[1]]$polys, data_[[1]]$dimred)
+linked_views(data_[[2]]$polys, data_[[2]]$dimred)
+linked_views(data_[[3]]$polys, data_[[3]]$dimred)
+linked_views(data_[[4]]$polys, data_[[4]]$dimred)
+linked_views(data_[[5]]$polys, data_[[5]]$dimred)
+linked_views(data_[[6]]$polys, data_[[6]]$dimred)
+```
