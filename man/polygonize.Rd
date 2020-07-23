@@ -6,6 +6,9 @@
 \usage{
 polygonize(im)
 }
+\arguments{
+\item{im}{The raster image to extract polygons from.}
+}
 \description{
 Light wrapper around stars::st_as_stars
 }

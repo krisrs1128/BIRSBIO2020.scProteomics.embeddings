@@ -6,6 +6,11 @@
 \usage{
 fit_wrapper(x, y)
 }
+\arguments{
+\item{x}{The covariates to use for training.}
+
+\item{y}{The response to fit to.}
+}
 \description{
 Helper to Fit Models
 }

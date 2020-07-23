@@ -5,8 +5,8 @@ dependencies:
     script: d3.v5.min.js
   - name: d3-selection-multi
     version: 1.0.1
-    src: "htmlwidgets/lib/d3-selection-multi"
-    script: d3-selection-multi.v1.min.js
+    src: "htmlwidgets/lib/d3-sm"
+    script: d3-sm.v1.min.js
   - name: linked_views
     version: 0.0.1
     src: "htmlwidgets/lib/linked_views"

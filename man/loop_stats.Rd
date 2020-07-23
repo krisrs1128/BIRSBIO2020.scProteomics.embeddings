@@ -11,6 +11,8 @@ loop_stats(cell_ids, type = "raster", ...)
 
 \item{type}{Either "raster" or "graph". Specifies the types of neighborhoods
 (image or graph) on which to compute statistics.}
+
+\item{...}{Additional arguments to the cell_fun.}
 }
 \description{
 Loop functions that can be applied on a cell by cell basis.

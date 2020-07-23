@@ -6,6 +6,12 @@
 \usage{
 background_prop(x, ...)
 }
+\arguments{
+\item{x}{A subset of the cells dataframe with $cellLabelInImage available.}
+
+\item{...}{Additional unused arguments. Present only for consistency of
+functional efinitions}
+}
 \description{
 This is an example of a function that can be called in \code{loop_stats}.
 }

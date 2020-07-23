@@ -6,6 +6,9 @@
 \usage{
 generate_model(n_ft)
 }
+\arguments{
+\item{n_ft}{The number of inputs to the first layer of the model.}
+}
 \description{
 Multitask Regression Model
 }

@@ -17,6 +17,8 @@ geometry of each cell.}
 \item{fun}{A function that can be applied to a data.frame whose rows are
 pixels and whose columns give features of those pixels (e.g., immune
 group).}
+
+\item{...}{Additional unused arguments, for consistency with other functions.}
 }
 \value{
 result A tibble mapping the cell to statistics calculated by fun.

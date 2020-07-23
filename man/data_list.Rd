@@ -6,6 +6,10 @@
 \usage{
 data_list(pattern)
 }
+\arguments{
+\item{pattern}{A partial matching string to use to extract variables from the
+global environment.}
+}
 \description{
 Wrapper to get SCE data
 }

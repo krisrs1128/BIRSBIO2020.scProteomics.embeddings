@@ -6,6 +6,15 @@
 \usage{
 plot_fits(x, y, glmnet_fit, rf_fit)
 }
+\arguments{
+\item{x}{The covariates to use for training.}
+
+\item{y}{The response to fit to.}
+
+\item{glmnet_fit}{The result of a glmnet model, to visualize.}
+
+\item{rf_fit}{The result of a rf model, to visualize.}
+}
 \description{
 Helper to Plot Model Results
 }

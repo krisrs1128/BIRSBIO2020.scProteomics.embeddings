@@ -6,6 +6,12 @@
 \usage{
 type_props(x, ...)
 }
+\arguments{
+\item{x}{A data frame containing cell type information (in a column called
+$cell_type)}
+
+\item{...}{Additional unused arguments.}
+}
 \description{
 Function to extract proportion of cell types within each subgraph.
 }

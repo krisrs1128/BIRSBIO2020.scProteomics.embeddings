@@ -1,4 +1,6 @@
 
+#' @importFrom dplyr %>% arrange %>%
+#' @importFrom tibble as_tibble
 unify_row_data <- function(row_data_list) {
   do.call(rbind, row_data_list) %>%
     as_tibble() %>%
@@ -6,6 +8,9 @@ unify_row_data <- function(row_data_list) {
     arrange(channel_name, marker_name)
 }
 
+#' @importFrom tibble as_tibble
+#' @importFrom SummarizedExperiment colData
+#' @importFrom dplyr bind_rows select everything mutate_at vars %>%
 unify_col_data <- function(col_data_list) {
   col_union <- lapply(col_data_list, function(x) as_tibble(colData(x)))
   bind_rows(col_union, .id = "cell_type") %>%
@@ -28,6 +33,7 @@ subsample_experiments <- function(x_list, p_keep = 0.05) {
 #'
 #' Attempts to download data to directory if it's not already found.
 #' @param directory Directory to which all the data is downloaded.
+#' @importFrom utils download.file unzip
 #' @export
 download_data <- function(directory) {
   dir.create(directory, recursive = TRUE)
@@ -56,6 +62,9 @@ download_data <- function(directory) {
 }
 
 #' Wrapper to get SCE data
+#'
+#' @param pattern A partial matching string to use to extract variables from the
+#'   global environment.
 #' @export
 data_list <- function(pattern) {
   global <- ls(envir = .GlobalEnv)
@@ -68,9 +77,11 @@ data_list <- function(pattern) {
 #' Polygonize a Raster Image
 #'
 #'  Light wrapper around stars::st_as_stars
+#'
+#' @param im The raster image to extract polygons from.
 #' @importFrom stars st_as_stars
 #' @importFrom sf st_as_sf st_cast st_buffer
-#' @importFrom dplyr mutate group_by summarise select n
+#' @importFrom dplyr mutate group_by summarise select n %>%
 #' @export
 polygonize <- function(im) {
   polys <- st_as_stars(im) %>%
@@ -88,6 +99,11 @@ polygonize <- function(im) {
 #' Proportion of image that's Background
 #'
 #' This is an example of a function that can be called in `loop_stats`.
+#'
+#' @param x A subset of the cells dataframe with $cellLabelInImage available.
+#' @param ... Additional unused arguments. Present only for consistency of
+#'   functional efinitions
+#' @importFrom tibble tibble
 #' @export
 background_prop <- function(x, ...) {
   if (nrow(x) == 0) { # case of no neighbors
@@ -99,8 +115,14 @@ background_prop <- function(x, ...) {
 }
 
 #' Proportion of Cell Types
-#' 
+#'
 #' Function to extract proportion of cell types within each subgraph.
+#'
+#' @param x A data frame containing cell type information (in a column called
+#'   $cell_type)
+#' @param ... Additional unused arguments.
+#' @importFrom tibble tibble
+#' @importFrom dplyr %>%
 #' @export
 type_props <- function(x, ...) {
   if (nrow(x) == 0) { # case of no neighbors
@@ -119,7 +141,7 @@ type_props <- function(x, ...) {
 #' @param exper A SummarizedExperiment representation of the MIBI data.
 #' @importFrom SummarizedExperiment colData
 #' @importFrom forcats as_factor
-#' @importFrom dplyr select mutate
+#' @importFrom dplyr select mutate %>%
 #' @export
 cell_type <- function(exper) {
   colData(exper) %>%
@@ -143,8 +165,9 @@ cell_type <- function(exper) {
 #' @param fun A function that can be applied to a data.frame whose rows are
 #'   pixels and whose columns give features of those pixels (e.g., immune
 #'   group).
+#' @param ... Additional unused arguments, for consistency with other functions.
 #' @importFrom igraph neighbors
-#' @importFrom dplyr filter group_map mutate select everything
+#' @importFrom dplyr filter group_map mutate select everything %>%
 #' @return result A tibble mapping the cell to statistics calculated by fun.
 graph_stats_cell <- function(cell_id, G, polys, fun, ...) {
   ball <- neighbors(G, as.character(cell_id))
@@ -167,7 +190,8 @@ graph_stats_cell <- function(cell_id, G, polys, fun, ...) {
 #' @importFrom sf st_centroid
 #' @importFrom pracma distmat
 #' @importFrom igraph graph_from_data_frame
-#' @importFrom dplyr bind_rows
+#' @importFrom tibble tibble
+#' @importFrom dplyr bind_rows %>%
 #' @export
 extract_graph <- function(geometries, K = 5) {
   nb <- knn2nb(knearneigh(st_centroid(geometries), K)
@@ -208,7 +232,7 @@ extract_graph <- function(geometries, K = 5) {
 #' @param plot_masks If you want to see what the subsets of cells looks like,
 #'   you can use this.
 #' @return result A tibble mapping the cell to statistics calculated by fun.
-#' @importFrom dplyr filter select left_join group_map mutate everything
+#' @importFrom dplyr filter select left_join group_map mutate everything %>%
 #' @importFrom raster mask as.matrix
 #' @importFrom reshape2 melt
 #' @importFrom sf st_centroid st_buffer as_Spatial
@@ -243,7 +267,8 @@ raster_stats_cell <- function(cell_id, im, polys, fun, buffer_radius=90,
 #' @param cell_ids A vector of cell IDs on which to apply a function to
 #' @param type Either "raster" or "graph". Specifies the types of neighborhoods
 #'   (image or graph) on which to compute statistics.
-#' @importFrom dplyr bind_rows
+#' @param ... Additional arguments to the cell_fun.
+#' @importFrom dplyr bind_rows %>%
 #' @export
 loop_stats <- function(cell_ids, type="raster", ...) {
   cell_fun <- ifelse(type == "raster", raster_stats_cell, graph_stats_cell)
@@ -258,6 +283,7 @@ loop_stats <- function(cell_ids, type="raster", ...) {
 
 #' Multitask Regression Model
 #'
+#' @param n_ft The number of inputs to the first layer of the model.
 #' @importFrom keras keras_model_sequential layer_dense layer_activation compile optimizer_adam
 #' @export
 generate_model <- function(n_ft) {
@@ -292,7 +318,7 @@ load_mibi <- function(data_dir, n_paths = NULL) {
   tiff_paths <- list.files(
     file.path(data_dir, "TNBC_shareCellData"),
     "*.tiff",
-    full = T
+    full.names = T
   )
 
   if (is.null(n_paths)) {
@@ -315,7 +341,7 @@ load_mibi <- function(data_dir, n_paths = NULL) {
 #' @param exper A summarized experiment object, containing measurements for each
 #'   cell.
 #' @param qsize How large should the rasters be?
-#' @importFrom dplyr rename select
+#' @importFrom dplyr rename select %>%
 #' @importFrom raster raster crop extent unique
 #' @importFrom stringr str_extract
 #' @importFrom tidyr unite
@@ -352,6 +378,7 @@ spatial_subsample <- function(tiff_paths, exper, qsize=500) {
 #'
 #' @param SampleID The sample IDs associated with each cell.
 #' @param cluster The cluster membership of each cell.
+#' @importFrom stats hclust dist
 #' @export
 sample_proportions <- function(SampleID, cluster) {
   tab <- table(SampleID, cluster)
@@ -400,6 +427,7 @@ entropies <- function(G, clusters_) {
 #' Average Pairwise Distance within Subgraphs
 #'
 #' @param G A graph whose subgraphs we want to find.
+#' @importFrom igraph edge_attr
 #' @export
 avg_dists <- function(G) {
   dists <- list()
@@ -412,6 +440,13 @@ avg_dists <- function(G) {
 }
 
 #' Helper to Plot Model Results
+#' @param x The covariates to use for training.
+#' @param y The response to fit to.
+#' @param glmnet_fit The result of a glmnet model, to visualize.
+#' @param rf_fit The result of a rf model, to visualize.
+#' @importFrom graphics abline points
+#' @import glmnet
+#' @importFrom stats predict
 #' @export
 plot_fits <- function(x, y, glmnet_fit, rf_fit) {
   y_hat <- predict(glmnet_fit, x)
@@ -422,8 +457,10 @@ plot_fits <- function(x, y, glmnet_fit, rf_fit) {
 }
 
 #' Helper to Fit Models
+#' @param x The covariates to use for training.
+#' @param y The response to fit to.
 #' @importFrom caret train
-#' @importFrom glmnet cv.glmnet
+#' @import glmnet
 #' @export
 fit_wrapper <- function(x, y) {
   glmnet_fit <- cv.glmnet(x, y)
