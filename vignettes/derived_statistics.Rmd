@@ -34,6 +34,10 @@ images, `sf`, `spdep`, and `stars` for manipulating polygon data, and are
 `igraph` for network processing,
 
 ```{r}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r}
 library("dplyr")
 library("ggplot2")
 library("igraph")
