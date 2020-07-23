@@ -1,28 +1,37 @@
 ---
-title: "Features from MIBI Segmentations"
+title: "Deriving Graph and Image Features"
 author: Kris Sankaran^[ksankaran@wisc.edu]
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Features from MIBI Segmentations}
+  %\VignetteIndexEntry{Deriving Graph and Image Features}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 params:
   sample_id: 5
 ---
 
-For the MIBI data, we have segmentation masks telling us where the cells are
-located. The masks themselves are not interesting. However, they give
-information about cell-ecosystem heterogeneity and composition which *is* very
-interesting. This script produces some intermediate outputs that get more
-directly at those questions,
+For the spatial transcriptomics data, we have segmentation masks telling us
+where the cells are located. The masks themselves are not particularly usable --
+it's hard to reason about raw pixels. However, they give information about
+cell-ecosystem heterogeneity and composition, and this has scientific and
+clinical meaning. This script produces some intermediate outputs that move us
+from raw pixel information into these more ecosystem-related (and human
+consumable) formats,
 
 * Polygons: We convert the raster into shapefiles, so that we can apply
-  geometric logic to them (getting centroids, areas, borders, ...)
+  geometric logic to them (getting centroids, areas, borders, ...). The idea is
+  to leverage methods from spatial data analysis; instead of counties, we have
+  cells.
 * Graphs: We can think of each cell as a node and declare edges if the cells are
-  within a certain distance / are K nearest neighbors.
-* Derived Statistics: For either polygons or graphs, we show how you can get
+  within a certain distance / are $K$-nearest neighbors. This reduces the raw
+  image information to a network of interacting cells.
+* Derived Statistics: For either polygons or graphs, we can compute hand-crafted
   statistics from local neighborhoods, like the proportion of the local
   neighborhood that's background.
+
+Here are the packages we'll use. Of note are `raster` for working with spatial
+images, `sf`, `spdep`, and `stars` for manipulating polygon data, and are
+`igraph` for network processing,
 
 ```{r}
 library("dplyr")
@@ -40,42 +49,29 @@ theme_set(theme_bw() + theme(panel.grid=element_blank()))
 ```
 
 First, we'll download all the data, if they're not already present in the
-`$HOME/Data` folder.
+`$HOME/Data` folder. We'll also crop to $250 \times 250$ subsets of the raw
+samples, so that the vignette can run quickly.
 
 ```{r}
-# if data folder doesn't exist, download and unzip
 data_paths <- download_data(file.path(Sys.getenv("HOME"), "Data"))
 sample_id <- params$sample_id
 f <- list.files(data_paths[[3]], str_interp("p${sample_id}_"), full.names = TRUE)
 im <- raster(f)
 im <- crop(im, extent(im, 0, 250, 0, 250)) # comment out to run on full data
+
+cell_data <- read_csv(file.path(data_paths[[3]], "cellData.csv")) %>%
+  filter(SampleID == sample_id)
 ```
 
 # Polygonization
 
 It can be helpful to work directly with polygon geometries, rather than the
 original raster image. You can then use any logic you'd have used for
-manipulating geographic shapefiles, for example.
+manipulating geographic shapefiles, for example. The block below converts the
 
 ```{r}
-polys <- st_as_stars(im) %>%
-  st_as_sf(merge = TRUE) %>%
-  st_cast("POLYGON")
-colnames(polys)[1] <- "cellLabelInImage"
-```
-
-This will join polygons that are neighbors. Notice that there is a thin border
-between cells, so we'll ignore that using the `snap` argument in `poly2nb`.
-
-```{r}
-cell_data <- read_csv(file.path(data_paths[[3]], "cellData.csv")) %>%
-  filter(SampleID == sample_id)
-
-polys <- polys %>%
-  inner_join(cell_data) %>%
-  group_by(cellLabelInImage) %>% # some regions get split into two adjacent polys --> merge
-  inner_join(cell_data) %>%
-  group_by(cellLabelInImage) %>%
+polys <- polygonize(im) %>%
+  left_join(cell_data) %>%
   summarise_all(function(x) { x[1] })
 ```
 
@@ -92,26 +88,28 @@ ggplot(polys) +
 
 # Graph Construction
 
-Sometimes we care less about the locations / sizes of individual cells than
-their connectivity / mixing structure. In the plot below, nodes are located at
-the original cell positions, and contiguity and knn edges are blue and red,
-respectively.
+Sometimes we care less about the locations and sizes of individual cells than
+their connectivity and mixing structure. For example, in the plot below, nodes
+are located at the original cell positions, and contiguity and knn edges are
+blue and red, respectively -- for some analysis, it might be enough to work with
+this induced network alone.
 
 ```{r}
-nb_contig <- poly2nb(polys, snap=1)
+nb_contig <- poly2nb(polys, snap=1) # contiguity graph
 coords <- polys %>%
   .[["geometry"]] %>%
   st_centroid() %>%
   st_coordinates()
 
-nb_knn <- knn2nb(knearneigh(coords, k = 5))
+nb_knn <- knn2nb(knearneigh(coords, k = 5)) # knn graph
 plot(polys$geometry[seq_len(nrow(polys))])
 plot(nb_knn, coords, add=T, col="#476a79")
 plot(nb_contig, coords, add=T, col="#97293f")
 ```
 
 We can turn this into a more familiar `igraph` object, for access to the usual
-graph manipulation routines.
+graph manipulation routines. The steps above have been wrapped in a small helper
+function `extract_graph`, so we can apply it on many patients easily.
 
 ```{r}
 G <- extract_graph(polys)
@@ -123,23 +121,36 @@ plot(G, vertex.size=3, edge.arrow.size=0, vertex.label=NA)
 With these new data structures, we can compute some cell-level summaries. First,
 let's look at features defined on windows centered around individual cells.
 
-The function below applys `fun` to the buffered window around the cell with
-label `cell_id`. For example, we can use it to get the proportion of each type
-of immune group within a window around that cell. This can be used to define a
-localized cell heterogeneity, for use in downstream analysis. We plot each of
-the image subwindows surrounding a single cell.
+The function below applys some cell-specific function to the buffered window
+around the cell with label `cell_id`. For example, we can use it to get the
+proportion of each type of immune group within a window around that cell. This
+can be used to define a localized cell heterogeneity for use in downstream
+analysis. We plot each of the image subwindows surrounding a single cell.
+
+For example, below, we show the proportion of each cell's image neighborhood
+that belongs to background, effectively measuring the local density of cells in
+the tissue.
 
 ```{r}
-#' How dense are cells, relative to background?
 cell_ids <- unique(polys$cellLabelInImage)
 loop_stats(cell_ids[1:10], "raster", im, polys, background_prop)
+```
+
+Using the same wrapper, we can also compute the cell types that make up each
+cell's neighborhood, reflecting cell-type heterogeneity.
+
+```{r}
+loop_stats(cell_ids[1:10], "raster", im, polys, type_props)
 ```
 
 # Neighbor Features
 
 Alternatively, we could ignore the spatial information entirely, and summarize
-cells according to the properties of their neighbors.
+cells according to the properties of their neighbors. Here are the same two
+statistics, computed by looking at the graph alone, and ignoring cell size
+entirely.
 
 ```{r}
 loop_stats(cell_ids[1:10], "graph", G, polys, background_prop)
+loop_stats(cell_ids[1:10], "graph", G, polys, type_props)
 ```
