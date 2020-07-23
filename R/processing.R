@@ -314,7 +314,7 @@ generate_model <- function(n_ft) {
 #' @importFrom SingleCellExperiment colData
 #' @export
 load_mibi <- function(data_dir, n_paths = NULL) {
-  load(file.path(data_dir, "mibiSCE.rda"))
+  mibi.sce <- get(load(file.path(data_dir, "mibiSCE.rda")))
   tiff_paths <- list.files(
     file.path(data_dir, "TNBC_shareCellData"),
     "*.tiff",
@@ -390,7 +390,7 @@ sample_proportions <- function(SampleID, cluster) {
 #'
 #' @param G A graph whose subgraphs we want to find.
 #' @param order The size of the subgraphs.
-#' @importFrom igraph ego induced_subgraph
+#' @importFrom igraph ego induced_subgraph V
 #' @export
 subgraphs <- function(G, order = 3) {
   ids <- V(G)
@@ -412,6 +412,7 @@ subgraphs <- function(G, order = 3) {
 #' @param G A graph whose subgraphs we want to find.
 #' @param clusters_ The cluster membership of each cell. Indices must correspond
 #'   to indices of V(G).
+#' @importFrom igraph V
 #' @export
 entropies <- function(G, clusters_) {
   ents <- list()
