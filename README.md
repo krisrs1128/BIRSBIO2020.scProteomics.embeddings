@@ -53,5 +53,7 @@ docker run -e PASSWORD=<make_up_a_password_here> -p 8787:8787 krisrs1128/birs202
 ```
 
 and then navigate to [localhost:8787](localhost:8787) and enter username =
-rstudio and password = your password. You can then browse to the vignettes
-folder and run all associated analysis.
+rstudio and password = your password. In the console, install all dependencies
+using `remotes::install_deps(dependencies = TRUE, repos = BiocManager::repositories())`. 
+Then, you can then browse to the vignettes folder and run all the analysis on
+this site.

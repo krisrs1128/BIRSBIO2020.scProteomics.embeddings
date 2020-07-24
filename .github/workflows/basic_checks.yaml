@@ -72,9 +72,10 @@ jobs:
         run: |
           options(repos = c(CRAN = "https://cran.r-project.org"))
           BiocManager::repositories()
-          getwd()
           remotes::install_deps(dependencies = TRUE, repos = BiocManager::repositories())
-          remotes::install_cran(c("rcmdcheck", "reticulate", "tensorflow", "keras"))
+          remotes::install_cran(c("rcmdcheck"))
+          install.packages("reticulate")
+          install.packages(c("tensorflow", "keras"))
           tensorflow::install_tensorflow(envname="~/.virtualenvs/r-reticulate")
         shell: Rscript {0}
 
