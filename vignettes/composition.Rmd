@@ -1,5 +1,5 @@
 ---
-title: "Disentangling Composition and Spatial Effects"
+title: "Disentangling Composition and Ecological Effects"
 author: Kris Sankaran^[ksankaran@wisc.edu]
 output: rmarkdown::html_vignette
 vignette: >
@@ -10,28 +10,48 @@ params:
   K: 20
 ---
 
-* Question we answer in this vignette: to what extent can spatial features from
-  MIBI-ToF data be identified from the composition of cells.
-* More direct question: We know that if a sample has only one cell type, then it
-  cannot have mixing. We want to push this thinking further.
-    - Can you determine spatial properties (like the amount of mixing between
-      cell types, the cell density of the sample) from just the composition of
-      cells that are present?
-    - This is an interesting question because
-      + Spatial properties are known to be predictive of certain disease
-        characteristics, and can now be directly interrogated using technology
-        like MIBI-ToF
-      + Cell type can be directly measured using cheaper masstag technologies
+To what extent can the ecological features of a sample be recovered from the
+composition of cells that it contains? For example, we know that if a sample had
+only one type of cell, then it could not have any cell type mixing. More
+generally, we'd like to know to whether spatial properties of a sample, like
+tumor heterogeneity, can be recovered from cell composition data alone. This is
+an interesting question because
 
-* Our approach has two parts,
-  - FIrst we use MIBI-TOF spatial information to extract spatial features of interest
-  - We cluster the cells according to protein expression values
-  - We predict spatial properties based on proportions of cell clusters
-* Reason for clustering according to expression values is that we may want to
-  use a more granular collection of clusters than are available from prior
-  analysis / which are designed for human consumption.
+* Spatial properties are known to be predictive of disease progression, as been
+  found by directly interrogating spatial proteomic data (like MIBI-TOF).
+* Cell type, in contrast to cell spatial features, can be recovered directly
+  from cheaper cytof-type technologies.
+
+At a low level, we're asking to what extent cytof can be used as a proxy for
+spatial proteomic sensors. Viewed more broadly, though, the methodological
+question that this problem reflects is, can we measure whether a new data source
+provides truly new information, and how can we isolate the conclusions that are
+attainable through one sensor but not another?
+
+Our approach has two parts,
+
+1. First, we use MIBI-TOF spatial information to extract spatial features of
+   interest. These cells are then clustered by protein expression values.
+2. Second, we predict spatial properties based on the proportions of each
+   samples' cells belonging to each cluster.
+
+In step 1, we cluster according to expression values because we want to use a
+finer-grained definition of cell types than we would typically use.
+
+One tradeoff to note: by defining features at the sample level, we are reducing
+the sample size -- we had many cells, but only a few samples^[Viewed
+differently, though, the cells within samples are not i.i.d., so the reduction
+may not be so dramatic.]. However, the features for each sample can be more
+complex than those for individual cells, and this can give a stronger basis from
+which to relate the different sources of data.
+
+# Setup
 
 First, let's load the libraries needed in this vignette.
+
+```{r}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
 
 ```{r}
 library("SummarizedExperiment")
@@ -57,19 +77,24 @@ ims <- subsample$ims
 mibi_sce <- subsample$exper
 ```
 
-* get cluster the proteins, and extract compositions from each sample
-* cell_clusters is the output of `kmeans` on the original protein expression
-  matrix, and mprops summarizes how many of each cluster each sample has
+# Extract cell clusters
+
+In the next step, we cluster cells across all samples, and then compute the
+cluster mixing proportions associated with each sample. For clustering, we
+simply run `kmeans` on the original protein expression matrix. `mprops` contains
+the mixing proportions that we use to summarize the non-spatial features of each
+sample.
 
 ```{r}
 cell_clusters <- kmeans(t(assay(mibi_sce)), params$K)
 props <- sample_proportions(colData(mibi_sce)$SampleID, cell_clusters$cluster)
 mprops <- data.frame(props)
+head(mprops)
 ```
 
 Next, we join the cluster information into high-level sample information.
-cd_samp has colData summarized at the individual patient level, rather than one
-row for each cell.
+`cd_samp` has `colData` summarized at the individual patient level, rather than
+one row for each cell, so it is a dramatic reduction of the original assay.
 
 ```{r}
 cd <- colData(mibi_sce) %>%
@@ -89,8 +114,12 @@ cd_samp <- cd %>%
 cluster_ids <- setNames(cell_clusters$cluster, cd$scell)
 ```
 
-These are example sample-level cluster compositions, based entirely on antigen
-information (ignoring spatial information).
+Below, we plot the sample-level cluster compositions, based entirely protein
+expression. Each column represent one sample, and each row is one expression
+cluster. The shading of a cell is the (square root of the) proportion of that
+sample that belongs in that cluster. Each column summarizes the protein
+expression (and hence cell type) composition of that sample.
+
 ```{r}
 ggplot(mprops %>% left_join(cd_samp)) +
   geom_tile(aes(x = SampleID, y = cluster, fill = sqrt(Freq))) +
@@ -99,11 +128,17 @@ ggplot(mprops %>% left_join(cd_samp)) +
   theme(legend.position = "bottom")
 ```
 
-* Next we calculate spatial statistics using the raster data (appropriately
-  transformed into graphs).
-* Extract local entropy and neighborhood sizes.
-  - By local entropy, we mean the entropy of cluster proportion vectors within
-    each cell-centric neighborhood in the sample's graph
+# Spatial features
+
+Next we compute the spatial features that we want to associate with the cell
+type composition information above. These are the ecological features associated
+with each sample -- the data above summarized individual cells, but these data
+describe their interactions.
+
+We first polygonize the rasters and extract a corresponding KNN graph. For each
+cell, we extract the order-3 subgraph surrounding it. For each of these
+subgraphs, we compute the entropy of cluster composition (which reflects tumor
+heterogeneity) and average pairwise distance (which reflects tumor density).
 
 ```{r spatial_stat, message = FALSE, warning = FALSE}
 sample_names <- as.character(cd_samp$SampleID)
@@ -132,7 +167,9 @@ for (i in seq_along(sample_names)) {
 ```
 
 Now we join in these spatial statistics with the sample-level summaries we
-computed before.
+computed before. To do this, we first summarize the cell-neighborhood features
+into features across the entire spatial sample. Here, we simply take the average
+and variances of these subgraph features, for all subgraphs in the graph.
 
 ```{r plot_spatial}
 spatial <- bind_rows(spatial, .id = "SampleID") %>%
@@ -159,11 +196,11 @@ spatial_cell <- spatial %>%
 ```
 
 These figures give us a sense of how the new spatial statistics are associated
-with known sample characteristics. For example, when entropy is large {something
-happens to the TIL score}.
+with known sample characteristics. For example, the cellular neighborhoods of
+CD8 cells are generally more varied in expression type than those of
+keratin-positive tumor cells.
 
 ```{r}
-## overall histograms
 ggplot(spatial_cell) +
   geom_histogram(aes(x = entropy, fill = as.factor(TIL_score))) +
   scale_fill_brewer(palette = "Greens", na.value = "grey") +
@@ -201,13 +238,21 @@ ggplot(spatial_cell %>% mutate(SampleID = factor(SampleID, levels = slev))) +
   )
 ```
 
-This is just more exploratory analysis of the derived spatial features.
+In the figures below, we relate sample characteristics to these extracted features.
 
-This is how each individual differs in terms of the cell-label entropy of and
-average pairwise distance of their 5-nearest neighborhoods.
+* The first figure plots the relationship between average pairwise distance and
+  entropy of cell neighborhoods, faceted by patient. It shows that different
+  samples tend to have very different values of these features, and that the
+  same cell type can have different spatial properties depending on the patient.
+  It also shows that there are subgroups of patients with similar entropy and
+  density properties (e.g., 28 and 35).
+* The second figure plots the average subgraph entropy against patient survival,
+  shaded by TIL score, which is a measure of the degree to which each tumor is
+  "invaded" by immune cells. There is no detectable correlation.
+* The third figure is the analogous plot for average pairwise distance within
+  subgraphs. When the TIL score is low, the average pairwise distance is large.
 
 ```{r}
-## Sample level plots
 ggplot(spatial_samp) +
   geom_point(
     aes(x = me, y = Survival_days_capped_2016.1.1),
@@ -231,8 +276,13 @@ ggplot(spatial_samp) +
   ) +
   scale_color_brewer(palette = "Greens", na.value = "grey") +
   theme(legend.position = "bottom")
+```
 
-## Cell level plots
+We can perform similar exploratory analysis at the cell, rather than the
+patient, level. The figures below expand each sample above into all their
+component cells.
+
+```
 ggplot(spatial_cell) +
   geom_jitter(
     aes(x = TIL_score, y = entropy, col = as.factor(SampleID)),
@@ -248,15 +298,29 @@ ggplot(spatial_cell) +
   theme(legend.position = "none")
 ```
 
-* Can we predict properties of the sample-wise entropy distribution based on
-  just the cell compositions?
-* Is there something about the survival that isn't captured entirely by the
-  composition information?
-* First, we prepare covariates and response data. Our covariates are the
-  (square-root transformed) cluster mixture proportions associated with each
-  sample. Remember that these clusters are computed without reference to any
-  spatial information -- they are in principle recoverable from masstag
-  technologies alone.
+# Relating data sources
+
+To resolve the questions posed at the start of this vignette, we will try to
+predict the sample-wise ecological properties using only the cell cluster
+compositions. Very high accuracy would suggest high redundancy between these
+datasets, while low accuracy suggests that the devices are capturing orthogonal
+sources of variation.
+
+Alternatively, we could relate each table to a single response variable, here,
+the survival time of each patient. In this supervised analog of the above
+analysis we see whether adding a new data source increases the ability to
+predict the response. If the information between these sources is completely
+redundant, we would expect the performance to remain about the same (or even
+deteriorate, since fitting will become more challenging in higher dimensions).
+This approach is deferred to the next section. Understanding the trade-offs
+between the first (unsupervised, more CCA-like) and second (supervised,
+PLS-like) analysis is an interesting direction for future work.
+
+First, we prepare the covariates and response data. Our covariates are the
+(square-root transformed) cluster mixture proportions associated with each
+sample. Remember that these clusters are computed without reference to any
+spatial information -- they are in principle recoverable from cytof technologies
+alone.
 
 ```{r}
 spatial_samp <- spatial_samp %>%
@@ -303,33 +367,20 @@ It seems like average pairwise distance is predictable, though not quite as much
 as entropy. The standard errors are not predictable using the linear model, but
 seem okay using the random forest (which I find an odd result...)
 
-What about the TIL score?
+# Interpreting models
 
-```{r}
-y <- as.numeric(scale(spatial_comp$TIL_score))
-keep_ix <- !is.na(y)
-sum(keep_ix)
-
-fits <- fit_wrapper(x[keep_ix, ], y[keep_ix])
-plot_fits(x[keep_ix, ], y[keep_ix], fits$glmnet, fits$rf)
-```
-
-There are so many missing values in TIL score, that I'm not sure whether we're
-actually learning anything meaningful here. It may be the case that the entropy
-and neighborhood size features are predictable, but not the TIL score? I don't
-have an explanation for how that could happen, though.
-
-# Interpreting Models
-
-Now that we have established {}, we want to dig a bit more deeply into how these
-fitted models are structured.
+Now that we have seen how we could measure the extent to which information
+across tables overlap, we will see if we can isolate where any new information
+came from. For this, we will interpret the models we used to relate the tables.
 
 ```{r}
 y <- as.numeric(scale(spatial_comp$me))
 fits <- fit_wrapper(x, y)
 ```
 
-First, let's study the output of the glmnet model, even though it's performance is lower.
+First, let's study the output of the glmnet model. Its out-of-sample performance
+is lower than the random forest's, but it is more directly amenable to
+interpretation.
 
 ```{r}
 plot(fits$glmnet$glmnet.fit)
@@ -346,9 +397,21 @@ y_order <- order(y)
 image(t(cbind(y[y_order] / 4, x[y_order, imp_ix[1:10] - 1])))
 ```
 
-It seems that....
+The plot above shows what the most important predictors look like. Apparently,
+many clusters have no representation in many samples -- these are the vertical
+bars at zero. However, increasing the number of cells from particular clusters
+seems clearly related to increases in sample-level entropy. Interestingly,
+increasing the proportion too much ends up decreasing entropy. This is
+reasonable in retrospect, since having too many cells from one cluster will
+preclude any mixing. This nonlinear structure also likely explains why the
+random forest performed better in this application.
 
-How can we interpret the associated clusters?
+# Interpreting clusters
+
+In the figure below, we plot the centroid of each cluster. Each panel is a
+different cluster, and is shaded according to the lasso coefficient associated
+with that cluster. Each bar is a single protein, and its height is the average
+expression value of that protein within the cluster.
 
 ```{r}
 z <- cell_clusters$centers
@@ -372,8 +435,16 @@ ggplot(mcenters) +
   scale_fill_viridis() +
   scale_y_continuous(limits = c(-2, 6), oob = scales::squish) +
   facet_wrap(~ cluster) +
-  theme(axis.text.x = element_text(angle = -90, hjust = 0))
+  theme(axis.text.x = element_text(size  = 5, angle = -90, hjust = 0))
+```
 
+Most clusters have no relationship with the response in the lasso model. Below
+we plot only those with nonzero coefficients. Note that the cluster with the
+strongest relationship with entropy is the one with a high fraction of
+expression level for CD8, which is consistent with our observation earlier that
+CD8 cells are associated wtih higher entropy local neighborhoods.
+
+```{r}
 ggplot(mcenters %>% filter(beta != 0)) +
   geom_bar(
     aes(x = protein, y = value, fill = beta),
@@ -396,14 +467,15 @@ table-wise analog of variable importance. In principle, we could multitask
 regress on to several phenotypic variables, but for now, we'll focus on
 survival.
 
-There seem to be two general ways to approach this,
+There seem to be two general ways to carry out this strategy,
 * Predict using the two tables separately, then together. See to what extent the
   underlying information is orthogonal. If the information is completely
   redundant, there is no benefit by combining the separate sources.
 * Compute the residual of one source, regressing out the other. This is somehow
   the "leftover" structure, and can also be used for prediction.
 
-We'll try both approaches here. First, predicting separately, then together.
+We'll try the first approach here, using a random survival forest to predict
+survival time using both the spatial, expression, and combined features.
 
 ```{r}
 combined_x <- spatial_comp %>%
@@ -425,60 +497,6 @@ surv_rf <- rfsrc(y ~ . , data = data.frame(combined_x[keep_ix, ], y = y), mtry=2
 plot(surv_rf) # this model is hopeless
 ```
 
-So, it doesn't seem like survival is so easy to predict, using this information.
-So, let's reorient, and try to predict relevant groups of phenotypic
-information. To do this, we'll convert the phenotypic metadata into something we
-can do dimensionality reduction on. But first, is there any correlation between
-the x matrix we've constructed and the characteristics of the people?
-
-```{r}
-fits <- vector(length = ncol(cd_samp), mode = "list")
-for (j in seq_along(cd_samp)) {
-  print(j)
-
-  y <- cd_samp[[j]]
-  fam <- "gaussian"
-  if (!is.numeric(y)) {
-    fam <- "multinomial"
-    y <- y %>%
-      fct_explicit_na() %>%
-      fct_lump(prop = .1)
-
-    for (rare in c("Other", "NULL", "POSITIVE FOR A DELETERIOUS MUTATION")) {
-      if (sum(y == rare) < 5) {
-        y[y == rare] <- "(Missing)"
-      }
-    }
-    if (sum(y == "(Missing)") < 5) {
-      y[y == "(Missing)"] <- "POSITIVE"
-    }
-
-    y <- droplevels(y)
-    if (nlevels(y) == 1) next
-  } else {
-    if (var(y, na.rm = T) == 0) next
-    y[is.na(y)] <- median(y, na.rm = T)
-    y <- scale(y)
-  }
-
-
-  fits[[j]] <- cv.glmnet(combined_x[keep_ix, ], y[keep_ix], family=fam)
-}
-
-names(fits) <- colnames(cd_samp)
-fits
-```
-
-Weirdly enough, we seem to be able to predict the year of diagnosis. We can also
-predict the donor number (not really surprising). Other than that, the only
-variable I'm really able to predict is TIL score, which makes sense.
-
-```{r}
-plot(fits$YEAR)
-image(coef(fits$YEAR$glmnet.fit)) # a bunch of these expression values are correlated. Maybe different types of cancers collected in different years
-```
-
-Apparently this "using known phenotype" approach to assessing complementary
-information doesn't seem to be that promising (we can't predict anything
-meaningful other than TIL Score). We'll also spend more time deriving new
-features.
+It doesn't seem like survival is so easy to predict, using this information.
+This prevents meaningful comparisons between the two feature sets -- they are
+both equally incapable of predicting the response.

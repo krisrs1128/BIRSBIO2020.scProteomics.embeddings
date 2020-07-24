@@ -26,6 +26,8 @@ Continuing this analogy, this suggests that a goal of integrative analysis is to
 be able to relate pairs of maps. In the visualizations below, we use the linking
 principle [@buja1991interactive] to relate the abstract U-Map constructed from
 protein expression levels with the physical spatial map produced by MIBI-TOF.
+Linking let's us estimate the probability that a cell lies in a particular
+location in one map, conditional on its location in the other.
 
 Since we want to be able to generate these interactive views on demand, we wrap
 the core javascript visualization code in an
@@ -125,7 +127,8 @@ according to
 Click and drag over a set of cells (in either panel) to select them. The
 corresponding locations of those cells in the other panel are highlighted when
 you do so. If a brush is added to each panel, then all cells in the union of the
-two selections are highlighted. See example here for further instructions.
+two selections are highlighted. See the example
+[here](https://youtu.be/snzJ8Xa89LA) for typical use.
 
 ```{r, warning=F, message=F}
 data_ <- list()
