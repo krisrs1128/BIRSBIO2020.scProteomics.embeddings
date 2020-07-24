@@ -75,7 +75,10 @@ manipulating geographic shapefiles, for example. The block below converts the
 
 ```{r}
 polys <- polygonize(im) %>%
-  left_join(cell_data) %>%
+  inner_join(cell_data) %>%
+  group_by(cellLabelInImage) %>% # some regions get split into two adjacent polys --> merge
+  inner_join(cell_data) %>%
+  group_by(cellLabelInImage) %>%
   summarise_all(function(x) { x[1] })
 ```
 
