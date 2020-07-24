@@ -71,7 +71,10 @@ im <- subsample$ims[[as.character(sample_id)]]
 cell_data <- colData(mibi_sce) %>%
   as.data.frame() %>%
   tidyr::unite(scell, SampleID, cellLabelInImage, remove = FALSE) %>%
-  mutate(cell_type = cell_type(mibi_sce),) %>%
+  mutate(
+    cell_type = cell_type(mibi_sce),
+    cell_group = fct_lump(cell_type, prop = 0.05)
+  ) %>%
   filter(SampleID == sample_id)
 ```
 
@@ -95,7 +98,7 @@ plots the immune group for each geometry.
 
 ```{r}
 ggplot(polys) +
-  geom_sf(aes(fill=as.factor(immuneGroup))) +
+  geom_sf(aes(fill=cell_group)) +
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme(legend.position = "bottom")
