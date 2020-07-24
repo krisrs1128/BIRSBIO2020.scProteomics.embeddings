@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Features from MIBI Segmentations • BIRSBIO2020.scProteomics.embeddings</title>
+<title>Deriving Graph and Image Features • BIRSBIO2020.scProteomics.embeddings</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Features from MIBI Segmentations">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Deriving Graph and Image Features">
 <meta property="og:description" content="BIRSBIO2020.scProteomics.embeddings">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -37,7 +37,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">BIRSBIO2020.scProteomics.embeddings</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1</span>
       </span>
     </div>
 
@@ -60,13 +60,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/composition.html">Disentangling Composition and Spatial Effects</a>
+      <a href="../articles/composition.html">Disentangling Composition and Ecological Effects</a>
     </li>
     <li>
-      <a href="../articles/derived_statistics.html">Features from MIBI Segmentations</a>
+      <a href="../articles/derived_statistics.html">Deriving Graph and Image Features</a>
     </li>
     <li>
-      <a href="../articles/embedding_prediction.html">Mapping between Embeddings</a>
+      <a href="../articles/embedding_prediction.html">Mapping between Cell-Level Embeddings</a>
     </li>
     <li>
       <a href="../articles/interactive.html">Interactive Visualization using Linked Views</a>
@@ -94,7 +94,7 @@
       </header><script src="derived_statistics_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Features from MIBI Segmentations</h1>
+      <h1 data-toc-skip>Deriving Graph and Image Features</h1>
                         <h4 class="author">Kris Sankaran<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>
 </h4>
             
@@ -106,93 +106,100 @@
 
     
     
-<p>For the MIBI data, we have segmentation masks telling us where the cells are located. The masks themselves are not interesting. However, they give information about cell-ecosystem heterogeneity and composition which <em>is</em> very interesting. This script produces some intermediate outputs that get more directly at those questions,</p>
+<p>For the spatial transcriptomics data, we have segmentation masks telling us where the cells are located. The masks themselves are not particularly usable – it’s hard to reason about raw pixels. However, they give information about cell-ecosystem heterogeneity and composition, and this has scientific and clinical meaning. This script produces some intermediate outputs that move us from raw pixel information into these more ecosystem-related (and human consumable) formats,</p>
 <ul>
-<li>Polygons: We convert the raster into shapefiles, so that we can apply geometric logic to them (getting centroids, areas, borders, …)</li>
-<li>Graphs: We can think of each cell as a node and declare edges if the cells are within a certain distance / are K nearest neighbors.</li>
-<li>Derived Statistics: For either polygons or graphs, we show how you can get statistics from local neighborhoods, like the proportion of the local neighborhood that’s background.</li>
+<li>Polygons: We convert the raster into shapefiles, so that we can apply geometric logic to them (getting centroids, areas, borders, …). The idea is to leverage methods from spatial data analysis; instead of counties, we have cells.</li>
+<li>Graphs: We can think of each cell as a node and declare edges if the cells are within a certain distance / are <span class="math inline">\(K\)</span>-nearest neighbors. This reduces the raw image information to a network of interacting cells.</li>
+<li>Derived Statistics: For either polygons or graphs, we can compute hand-crafted statistics from local neighborhoods, like the proportion of the local neighborhood that’s background.</li>
 </ul>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"dplyr"</span>)</pre></body></html></div>
-<pre><code>## 
-## Attaching package: 'dplyr'</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"ggplot2"</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"igraph"</span>)</pre></body></html></div>
-<pre><code>## 
-## Attaching package: 'igraph'</code></pre>
-<pre><code>## The following objects are masked from 'package:dplyr':
-## 
-##     as_data_frame, groups, union</code></pre>
-<pre><code>## The following objects are masked from 'package:stats':
-## 
-##     decompose, spectrum</code></pre>
-<pre><code>## The following object is masked from 'package:base':
-## 
-##     union</code></pre>
-<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"raster"</span>)</pre></body></html></div>
-<pre><code>## Loading required package: sp</code></pre>
-<pre><code>## 
-## Attaching package: 'raster'</code></pre>
-<pre><code>## The following object is masked from 'package:dplyr':
-## 
-##     select</code></pre>
-<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"readr"</span>)
+<p>Here are the packages we’ll use. Of note are <code>raster</code> for working with spatial images, <code>sf</code>, <code>spdep</code>, and <code>stars</code> for manipulating polygon data, and are <code>igraph</code> for network processing,</p>
+<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="kw pkg">knitr</span><span class="kw ns">::</span><span class="no"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html">opts_chunk</a></span>$<span class="fu">set</span>(<span class="kw">message</span> <span class="kw">=</span> <span class="fl">FALSE</span>, <span class="kw">warning</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"SingleCellExperiment"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"dplyr"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"forcats"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"ggplot2"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"igraph"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"raster"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"readr"</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"reshape2"</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"sf"</span>)</pre></body></html></div>
-<pre><code>## Linking to GEOS 3.6.2, GDAL 2.2.3, PROJ 4.9.3</code></pre>
-<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"spdep"</span>)</pre></body></html></div>
-<pre><code>## Loading required package: spData</code></pre>
-<pre><code>## To access larger datasets in this package, install the spDataLarge
-## package with: `install.packages('spDataLarge',
-## repos='https://nowosad.github.io/drat/', type='source')`</code></pre>
-<div class="sourceCode" id="cb19"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"stars"</span>)</pre></body></html></div>
-<pre><code>## Loading required package: abind</code></pre>
-<div class="sourceCode" id="cb21"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"stringr"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"sf"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"spdep"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"stars"</span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"stringr"</span>)
 <span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"BIRSBIO2020.scProteomics.embeddings"</span>)
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme_get.html">theme_set</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_bw</a></span>() + <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span>(<span class="kw">panel.grid</span><span class="kw">=</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html">element_blank</a></span>()))</pre></body></html></div>
-<p>First, we’ll download all the data, if they’re not already present in the <code>$HOME/Data</code> folder.</p>
-<div class="sourceCode" id="cb22"><html><body><pre class="r"><span class="co"># if data folder doesn't exist, download and unzip</span>
-<span class="no">data_paths</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BIRSBIO2020.scProteomics.embeddings/man/download_data.html">download_data</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"HOME"</span>), <span class="st">"Data"</span>))</pre></body></html></div>
-<pre><code>## Warning in dir.create(directory, recursive = TRUE): '/github/home/Data' already
-## exists</code></pre>
-<div class="sourceCode" id="cb24"><html><body><pre class="r"><span class="no">sample_id</span> <span class="kw">&lt;-</span> <span class="no">params</span>$<span class="no">sample_id</span>
-<span class="no">f</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html">list.files</a></span>(<span class="no">data_paths</span><span class="kw">[[</span><span class="fl">3</span>]], <span class="fu"><a href="https://stringr.tidyverse.org/reference/str_interp.html">str_interp</a></span>(<span class="st">"p${sample_id}_"</span>), <span class="kw">full.names</span> <span class="kw">=</span> <span class="fl">TRUE</span>)
-<span class="no">im</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html">raster</a></span>(<span class="no">f</span>)
-<span class="no">im</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/crop.html">crop</a></span>(<span class="no">im</span>, <span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html">extent</a></span>(<span class="no">im</span>, <span class="fl">0</span>, <span class="fl">250</span>, <span class="fl">0</span>, <span class="fl">250</span>)) <span class="co"># comment out to run on full data</span></pre></body></html></div>
-<pre><code>## Warning in .local(x, ...): invalid first colummn</code></pre>
-<pre><code>## Warning in .local(x, ...): invalid first row</code></pre>
+<p>First, we’ll download all the data, if they’re not already present in the <code>$HOME/Data</code> folder. We’ll also crop to <span class="math inline">\(250 \times 250\)</span> subsets of the raw samples, so that the vignette can run quickly.</p>
+<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">data_dir</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html">Sys.getenv</a></span>(<span class="st">"HOME"</span>), <span class="st">"Data"</span>)
+<span class="no">data_paths</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/download_data.html">download_data</a></span>(<span class="no">data_dir</span>)
+<span class="no">loaded_</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/load_mibi.html">load_mibi</a></span>(<span class="no">data_dir</span>)
+<span class="no">subsample</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/spatial_subsample.html">spatial_subsample</a></span>(<span class="no">loaded_</span>$<span class="no">tiffs</span>, <span class="no">loaded_</span>$<span class="no">mibi</span>, <span class="fl">250</span>)</pre></body></html></div>
+<pre><code>## [1] "cropping 1/41"
+## [1] "cropping 2/41"
+## [1] "cropping 3/41"
+## [1] "cropping 4/41"
+## [1] "cropping 5/41"
+## [1] "cropping 6/41"
+## [1] "cropping 7/41"
+## [1] "cropping 8/41"
+## [1] "cropping 9/41"
+## [1] "cropping 10/41"
+## [1] "cropping 11/41"
+## [1] "cropping 12/41"
+## [1] "cropping 13/41"
+## [1] "cropping 14/41"
+## [1] "cropping 15/41"
+## [1] "cropping 16/41"
+## [1] "cropping 17/41"
+## [1] "cropping 18/41"
+## [1] "cropping 19/41"
+## [1] "cropping 20/41"
+## [1] "cropping 21/41"
+## [1] "cropping 22/41"
+## [1] "cropping 23/41"
+## [1] "cropping 24/41"
+## [1] "cropping 25/41"
+## [1] "cropping 26/41"
+## [1] "cropping 27/41"
+## [1] "cropping 28/41"
+## [1] "cropping 29/41"
+## [1] "cropping 30/41"
+## [1] "cropping 31/41"
+## [1] "cropping 32/41"
+## [1] "cropping 33/41"
+## [1] "cropping 34/41"
+## [1] "cropping 35/41"
+## [1] "cropping 36/41"
+## [1] "cropping 37/41"
+## [1] "cropping 38/41"
+## [1] "cropping 39/41"
+## [1] "cropping 40/41"
+## [1] "cropping 41/41"</code></pre>
+<div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="no">mibi_sce</span> <span class="kw">&lt;-</span> <span class="no">subsample</span>$<span class="no">exper</span>
+
+<span class="no">sample_id</span> <span class="kw">&lt;-</span> <span class="no">params</span>$<span class="no">sample_id</span>
+<span class="no">im</span> <span class="kw">&lt;-</span> <span class="no">subsample</span>$<span class="no">ims</span><span class="kw">[[</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/as.character.html">as.character</a></span>(<span class="no">sample_id</span>)]]
+
+<span class="no">cell_data</span> <span class="kw">&lt;-</span> <span class="fu">colData</span>(<span class="no">mibi_sce</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://rdrr.io/pkg/raster/man/as.data.frame.html">as.data.frame</a></span>() <span class="kw">%&gt;%</span>
+  <span class="kw pkg">tidyr</span><span class="kw ns">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unite.html">unite</a></span>(<span class="no">scell</span>, <span class="no">SampleID</span>, <span class="no">cellLabelInImage</span>, <span class="kw">remove</span> <span class="kw">=</span> <span class="fl">FALSE</span>) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span>(
+    <span class="kw">cell_type</span> <span class="kw">=</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/cell_type.html">cell_type</a></span>(<span class="no">mibi_sce</span>),
+    <span class="kw">cell_group</span> <span class="kw">=</span> <span class="fu"><a href="https://forcats.tidyverse.org/reference/fct_lump.html">fct_lump</a></span>(<span class="no">cell_type</span>, <span class="kw">prop</span> <span class="kw">=</span> <span class="fl">0.05</span>)
+  ) <span class="kw">%&gt;%</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">SampleID</span> <span class="kw">==</span> <span class="no">sample_id</span>)</pre></body></html></div>
 <div id="polygonization" class="section level1">
 <h1 class="hasAnchor">
 <a href="#polygonization" class="anchor"></a>Polygonization</h1>
-<p>It can be helpful to work directly with polygon geometries, rather than the original raster image. You can then use any logic you’d have used for manipulating geographic shapefiles, for example.</p>
-<div class="sourceCode" id="cb27"><html><body><pre class="r"><span class="no">polys</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/stars/man/st_as_stars.html">st_as_stars</a></span>(<span class="no">im</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/stars/man/st_as_sf.html">st_as_sf</a></span>(<span class="kw">merge</span> <span class="kw">=</span> <span class="fl">TRUE</span>) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/sf/man/st_cast.html">st_cast</a></span>(<span class="st">"POLYGON"</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span>(<span class="no">polys</span>)[<span class="fl">1</span>] <span class="kw">&lt;-</span> <span class="st">"cellLabelInImage"</span></pre></body></html></div>
-<p>This will join polygons that are neighbors. Notice that there is a thin border between cells, so we’ll ignore that using the <code>snap</code> argument in <code>poly2nb</code>.</p>
-<div class="sourceCode" id="cb28"><html><body><pre class="r"><span class="no">cell_data</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html">read_csv</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span>(<span class="no">data_paths</span><span class="kw">[[</span><span class="fl">3</span>]], <span class="st">"cellData.csv"</span>)) <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span>(<span class="no">SampleID</span> <span class="kw">==</span> <span class="no">sample_id</span>)</pre></body></html></div>
-<pre><code>## Parsed with column specification:
-## cols(
-##   .default = col_double()
-## )</code></pre>
-<pre><code>## See spec(...) for full column specifications.</code></pre>
-<div class="sourceCode" id="cb31"><html><body><pre class="r"><span class="no">polys</span> <span class="kw">&lt;-</span> <span class="no">polys</span> <span class="kw">%&gt;%</span>
+<p>It can be helpful to work directly with polygon geometries, rather than the original raster image. You can then use any logic you’d have used for manipulating geographic shapefiles, for example. The block below converts the</p>
+<div class="sourceCode" id="cb6"><html><body><pre class="r"><span class="no">polys</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/polygonize.html">polygonize</a></span>(<span class="no">im</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">inner_join</a></span>(<span class="no">cell_data</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">cellLabelInImage</span>) <span class="kw">%&gt;%</span> <span class="co"># some regions get split into two adjacent polys --&gt; merge</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">inner_join</a></span>(<span class="no">cell_data</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span>(<span class="no">cellLabelInImage</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise_all.html">summarise_all</a></span>(<span class="kw">function</span>(<span class="no">x</span>) { <span class="no">x</span>[<span class="fl">1</span>] })</pre></body></html></div>
-<pre><code>## Joining, by = "cellLabelInImage"</code></pre>
-<pre><code>## Joining, by = c("cellLabelInImage", "SampleID", "cellSize", "C", "Na", "Si", "P", "Ca", "Fe", "dsDNA", "Vimentin", "SMA", "Background", "B7H3", "FoxP3", "Lag3", "CD4", "CD16", "CD56", "OX40", "PD1", "CD31", "PD-L1", "EGFR", "Ki67", "CD209", "CD11c", "CD138", "CD163", "CD68", "CSF-1R", "CD8", "CD3", "IDO", "Keratin17", "CD63", "CD45RO", "CD20", "p53", "Beta catenin", "HLA-DR", "CD11b", "CD45", "H3K9ac", "Pan-Keratin", "H3K27me3", "phospho-S6", "MPO", "Keratin6", "HLA_Class_1", "Ta", "Au", "tumorYN", "tumorCluster", "Group", "immuneCluster", "immuneGroup")</code></pre>
 <p>With these shapefiles, we can use geographic plotting tools. For example, this plots the immune group for each geometry.</p>
-<div class="sourceCode" id="cb34"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">polys</span>) +
-  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html">geom_sf</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">fill</span><span class="kw">=</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/factor.html">as.factor</a></span>(<span class="no">immuneGroup</span>))) +
+<div class="sourceCode" id="cb7"><html><body><pre class="r"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span>(<span class="no">polys</span>) +
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html">geom_sf</a></span>(<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span>(<span class="kw">fill</span><span class="kw">=</span><span class="no">cell_group</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_x_continuous</a></span>(<span class="kw">expand</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">0</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_y_continuous</a></span>(<span class="kw">expand</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="fl">0</span>, <span class="fl">0</span>)) +
   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span>(<span class="kw">legend.position</span> <span class="kw">=</span> <span class="st">"bottom"</span>)</pre></body></html></div>
@@ -201,76 +208,105 @@
 <div id="graph-construction" class="section level1">
 <h1 class="hasAnchor">
 <a href="#graph-construction" class="anchor"></a>Graph Construction</h1>
-<p>Sometimes we care less about the locations / sizes of individual cells than their connectivity / mixing structure. In the plot below, nodes are located at the original cell positions, and contiguity and knn edges are blue and red, respectively.</p>
-<div class="sourceCode" id="cb35"><html><body><pre class="r"><span class="no">nb_contig</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spdep/man/poly2nb.html">poly2nb</a></span>(<span class="no">polys</span>, <span class="kw">snap</span><span class="kw">=</span><span class="fl">1</span>)
+<p>Sometimes we care less about the locations and sizes of individual cells than their connectivity and mixing structure. For example, in the plot below, nodes are located at the original cell positions, and contiguity and knn edges are blue and red, respectively – for some analysis, it might be enough to work with this induced network alone.</p>
+<div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">nb_contig</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spdep/man/poly2nb.html">poly2nb</a></span>(<span class="no">polys</span>, <span class="kw">snap</span><span class="kw">=</span><span class="fl">1</span>) <span class="co"># contiguity graph</span>
 <span class="no">coords</span> <span class="kw">&lt;-</span> <span class="no">polys</span> <span class="kw">%&gt;%</span>
   <span class="no">.</span><span class="kw">[[</span><span class="st">"geometry"</span>]] <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/pkg/sf/man/geos_unary.html">st_centroid</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/stars/man/st_coordinates.html">st_coordinates</a></span>()
+  <span class="fu"><a href="https://rdrr.io/pkg/sf/man/st_coordinates.html">st_coordinates</a></span>()
 
-<span class="no">nb_knn</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spdep/man/knn2nb.html">knn2nb</a></span>(<span class="fu"><a href="https://rdrr.io/pkg/spdep/man/knearneigh.html">knearneigh</a></span>(<span class="no">coords</span>, <span class="kw">k</span> <span class="kw">=</span> <span class="fl">5</span>))
-<span class="fu"><a href="https://rdrr.io/pkg/stars/man/plot.html">plot</a></span>(<span class="no">polys</span>$<span class="no">geometry</span>[<span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span>(<span class="fu"><a href="https://rdrr.io/pkg/raster/man/ncell.html">nrow</a></span>(<span class="no">polys</span>))])
-<span class="fu"><a href="https://rdrr.io/pkg/stars/man/plot.html">plot</a></span>(<span class="no">nb_knn</span>, <span class="no">coords</span>, <span class="kw">add</span><span class="kw">=</span><span class="no">T</span>, <span class="kw">col</span><span class="kw">=</span><span class="st">"#476a79"</span>)
-<span class="fu"><a href="https://rdrr.io/pkg/stars/man/plot.html">plot</a></span>(<span class="no">nb_contig</span>, <span class="no">coords</span>, <span class="kw">add</span><span class="kw">=</span><span class="no">T</span>, <span class="kw">col</span><span class="kw">=</span><span class="st">"#97293f"</span>)</pre></body></html></div>
+<span class="no">nb_knn</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spdep/man/knn2nb.html">knn2nb</a></span>(<span class="fu"><a href="https://rdrr.io/pkg/spdep/man/knearneigh.html">knearneigh</a></span>(<span class="no">coords</span>, <span class="kw">k</span> <span class="kw">=</span> <span class="fl">5</span>)) <span class="co"># knn graph</span>
+<span class="fu"><a href="https://rdrr.io/pkg/raster/man/plot.html">plot</a></span>(<span class="no">polys</span>$<span class="no">geometry</span>[<span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq_len</a></span>(<span class="fu"><a href="https://rdrr.io/pkg/raster/man/ncell.html">nrow</a></span>(<span class="no">polys</span>))])
+<span class="fu"><a href="https://rdrr.io/pkg/raster/man/plot.html">plot</a></span>(<span class="no">nb_knn</span>, <span class="no">coords</span>, <span class="kw">add</span><span class="kw">=</span><span class="no">T</span>, <span class="kw">col</span><span class="kw">=</span><span class="st">"#476a79"</span>)
+<span class="fu"><a href="https://rdrr.io/pkg/raster/man/plot.html">plot</a></span>(<span class="no">nb_contig</span>, <span class="no">coords</span>, <span class="kw">add</span><span class="kw">=</span><span class="no">T</span>, <span class="kw">col</span><span class="kw">=</span><span class="st">"#97293f"</span>)</pre></body></html></div>
 <p><img src="derived_statistics_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
-<p>We can turn this into a more familiar <code>igraph</code> object, for access to the usual graph manipulation routines.</p>
-<div class="sourceCode" id="cb36"><html><body><pre class="r"><span class="no">G</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BIRSBIO2020.scProteomics.embeddings/man/extract_graph.html">extract_graph</a></span>(<span class="no">polys</span>)</pre></body></html></div>
-<pre><code>## Warning in st_centroid.sf(geometries): st_centroid assumes attributes are
-## constant over geometries of x</code></pre>
-<div class="sourceCode" id="cb38"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/stars/man/plot.html">plot</a></span>(<span class="no">G</span>, <span class="kw">vertex.size</span><span class="kw">=</span><span class="fl">3</span>, <span class="kw">edge.arrow.size</span><span class="kw">=</span><span class="fl">0</span>, <span class="kw">vertex.label</span><span class="kw">=</span><span class="fl">NA</span>)</pre></body></html></div>
+<p>We can turn this into a more familiar <code>igraph</code> object, for access to the usual graph manipulation routines. The steps above have been wrapped in a small helper function <code>extract_graph</code>, so we can apply it on many patients easily.</p>
+<div class="sourceCode" id="cb9"><html><body><pre class="r"><span class="no">G</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/extract_graph.html">extract_graph</a></span>(<span class="no">polys</span>)
+<span class="fu"><a href="https://rdrr.io/pkg/raster/man/plot.html">plot</a></span>(<span class="no">G</span>, <span class="kw">vertex.size</span><span class="kw">=</span><span class="fl">3</span>, <span class="kw">edge.arrow.size</span><span class="kw">=</span><span class="fl">0</span>, <span class="kw">vertex.label</span><span class="kw">=</span><span class="fl">NA</span>)</pre></body></html></div>
 <p><img src="derived_statistics_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 </div>
 <div id="raster-window-features" class="section level1">
 <h1 class="hasAnchor">
 <a href="#raster-window-features" class="anchor"></a>Raster Window Features</h1>
 <p>With these new data structures, we can compute some cell-level summaries. First, let’s look at features defined on windows centered around individual cells.</p>
-<p>The function below applys <code>fun</code> to the buffered window around the cell with label <code>cell_id</code>. For example, we can use it to get the proportion of each type of immune group within a window around that cell. This can be used to define a localized cell heterogeneity, for use in downstream analysis. We plot each of the image subwindows surrounding a single cell.</p>
-<div class="sourceCode" id="cb39"><html><body><pre class="r"><span class="co">#' How dense are cells, relative to background?</span>
-<span class="no">cell_ids</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/unique.html">unique</a></span>(<span class="no">polys</span>$<span class="no">cellLabelInImage</span>)
-<span class="fu"><a href="https://rdrr.io/pkg/BIRSBIO2020.scProteomics.embeddings/man/loop_stats.html">loop_stats</a></span>(<span class="no">cell_ids</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="st">"raster"</span>, <span class="no">im</span>, <span class="no">polys</span>, <span class="no">background_prop</span>)</pre></body></html></div>
+<p>The function below applys some cell-specific function to the buffered window around the cell with label <code>cell_id</code>. For example, we can use it to get the proportion of each type of immune group within a window around that cell. This can be used to define a localized cell heterogeneity for use in downstream analysis. We plot each of the image subwindows surrounding a single cell.</p>
+<p>For example, below, we show the proportion of each cell’s image neighborhood that belongs to background, effectively measuring the local density of cells in the tissue.</p>
+<div class="sourceCode" id="cb10"><html><body><pre class="r"><span class="no">cell_ids</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/unique.html">unique</a></span>(<span class="no">polys</span>$<span class="no">cellLabelInImage</span>)
+<span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/loop_stats.html">loop_stats</a></span>(<span class="no">cell_ids</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="st">"raster"</span>, <span class="no">im</span>, <span class="no">polys</span>, <span class="no">background_prop</span>)</pre></body></html></div>
 <p><img src="derived_statistics_files/figure-html/unnamed-chunk-8-1.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-2.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-3.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-4.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-5.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-6.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-7.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-8.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-9.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-8-10.png" width="700"></p>
 <pre><code>## # A tibble: 20 x 3
 ##    cellLabelInImage background props
 ##               &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt;
-##  1                2 FALSE      0.500
-##  2                2 TRUE       0.500
-##  3                3 FALSE      0.525
-##  4                3 TRUE       0.475
-##  5                4 FALSE      0.549
-##  6                4 TRUE       0.451
-##  7               42 FALSE      0.449
-##  8               42 TRUE       0.551
-##  9               59 FALSE      0.359
-## 10               59 TRUE       0.641
-## 11               62 FALSE      0.354
-## 12               62 TRUE       0.646
-## 13               66 FALSE      0.572
-## 14               66 TRUE       0.428
-## 15               85 FALSE      0.542
-## 16               85 TRUE       0.458
-## 17               90 FALSE      0.441
-## 18               90 TRUE       0.559
-## 19              102 FALSE      0.590
-## 20              102 TRUE       0.410</code></pre>
+##  1               38 FALSE      0.662
+##  2               38 TRUE       0.338
+##  3               39 FALSE      0.608
+##  4               39 TRUE       0.392
+##  5               40 FALSE      0.433
+##  6               40 TRUE       0.567
+##  7               48 FALSE      0.662
+##  8               48 TRUE       0.338
+##  9               65 FALSE      0.694
+## 10               65 TRUE       0.306
+## 11               69 FALSE      0.357
+## 12               69 TRUE       0.643
+## 13               83 FALSE      0.665
+## 14               83 TRUE       0.335
+## 15               88 FALSE      0.597
+## 16               88 TRUE       0.403
+## 17               89 FALSE      0.474
+## 18               89 TRUE       0.526
+## 19              100 FALSE      0.708
+## 20              100 TRUE       0.292</code></pre>
+<p>We can use the same wrapper to study the local cell mixing proportions.</p>
+<div class="sourceCode" id="cb12"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/loop_stats.html">loop_stats</a></span>(<span class="no">cell_ids</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="st">"raster"</span>, <span class="no">im</span>, <span class="no">polys</span>, <span class="no">type_props</span>)</pre></body></html></div>
+<p><img src="derived_statistics_files/figure-html/unnamed-chunk-9-1.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-2.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-3.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-4.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-5.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-6.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-7.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-8.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-9.png" width="700"><img src="derived_statistics_files/figure-html/unnamed-chunk-9-10.png" width="700"></p>
+<pre><code>## # A tibble: 22 x 3
+##    cellLabelInImage cellType               props
+##               &lt;dbl&gt; &lt;chr&gt;                  &lt;dbl&gt;
+##  1               38 Keratin-positive tumor 0.628
+##  2               38 &lt;NA&gt;                   0.372
+##  3               39 Keratin-positive tumor 0.574
+##  4               39 &lt;NA&gt;                   0.426
+##  5               40 Keratin-positive tumor 0.407
+##  6               40 &lt;NA&gt;                   0.593
+##  7               48 Keratin-positive tumor 0.621
+##  8               48 &lt;NA&gt;                   0.379
+##  9               65 Keratin-positive tumor 0.653
+## 10               65 &lt;NA&gt;                   0.347
+## # … with 12 more rows</code></pre>
 </div>
 <div id="neighbor-features" class="section level1">
 <h1 class="hasAnchor">
 <a href="#neighbor-features" class="anchor"></a>Neighbor Features</h1>
-<p>Alternatively, we could ignore the spatial information entirely, and summarize cells according to the properties of their neighbors.</p>
-<div class="sourceCode" id="cb41"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/BIRSBIO2020.scProteomics.embeddings/man/loop_stats.html">loop_stats</a></span>(<span class="no">cell_ids</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="st">"graph"</span>, <span class="no">G</span>, <span class="no">polys</span>, <span class="no">background_prop</span>)</pre></body></html></div>
+<p>Alternatively, we could ignore the spatial information entirely, and summarize cells according to the properties of their neighbors. Here are the same two statistics, computed by looking at the graph alone, and ignoring cell size entirely.</p>
+<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/loop_stats.html">loop_stats</a></span>(<span class="no">cell_ids</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="st">"graph"</span>, <span class="no">G</span>, <span class="no">polys</span>, <span class="no">background_prop</span>)</pre></body></html></div>
 <pre><code>## # A tibble: 10 x 3
 ##    cellLabelInImage background props
 ##               &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt;
-##  1                2 FALSE          1
-##  2                3 FALSE          1
-##  3                4 FALSE          1
-##  4               42 FALSE          1
-##  5               59 FALSE          1
-##  6               62 FALSE          1
-##  7               66 FALSE          1
-##  8               85 FALSE          1
-##  9               90 FALSE          1
-## 10              102 FALSE          1</code></pre>
+##  1               38 FALSE          1
+##  2               39 FALSE          1
+##  3               40 FALSE          1
+##  4               48 FALSE          1
+##  5               65 FALSE          1
+##  6               69 FALSE          1
+##  7               83 FALSE          1
+##  8               88 FALSE          1
+##  9               89 FALSE          1
+## 10              100 FALSE          1</code></pre>
+<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/loop_stats.html">loop_stats</a></span>(<span class="no">cell_ids</span>[<span class="fl">1</span>:<span class="fl">10</span>], <span class="st">"graph"</span>, <span class="no">G</span>, <span class="no">polys</span>, <span class="no">type_props</span>)</pre></body></html></div>
+<pre><code>## # A tibble: 10 x 3
+##    cellLabelInImage cellType               props
+##               &lt;dbl&gt; &lt;chr&gt;                  &lt;dbl&gt;
+##  1               38 Keratin-positive tumor     1
+##  2               39 Keratin-positive tumor     1
+##  3               40 Keratin-positive tumor     1
+##  4               48 Keratin-positive tumor     1
+##  5               65 Keratin-positive tumor     1
+##  6               69 Keratin-positive tumor     1
+##  7               83 Keratin-positive tumor     1
+##  8               88 Keratin-positive tumor     1
+##  9               89 Keratin-positive tumor     1
+## 10              100 Keratin-positive tumor     1</code></pre>
 </div>
 <div class="footnotes">
 <hr>

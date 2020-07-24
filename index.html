@@ -37,7 +37,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">BIRSBIO2020.scProteomics.embeddings</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.1</span>
       </span>
     </div>
 
@@ -60,13 +60,13 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="articles/composition.html">Disentangling Composition and Spatial Effects</a>
+      <a href="articles/composition.html">Disentangling Composition and Ecological Effects</a>
     </li>
     <li>
-      <a href="articles/derived_statistics.html">Features from MIBI Segmentations</a>
+      <a href="articles/derived_statistics.html">Deriving Graph and Image Features</a>
     </li>
     <li>
-      <a href="articles/embedding_prediction.html">Mapping between Embeddings</a>
+      <a href="articles/embedding_prediction.html">Mapping between Cell-Level Embeddings</a>
     </li>
     <li>
       <a href="articles/interactive.html">Interactive Visualization using Linked Views</a>
@@ -93,58 +93,35 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="buildabiocworkshop2020" class="section level1">
+
+<div id="embeddings-in-integrative-analysis-of-spatial-omics" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#buildabiocworkshop2020" class="anchor"></a>BuildABiocWorkshop2020</h1></div>
-<p>This package is a template for building a Bioconductor 2020 workshop. The package includes Github actions to:</p>
-<ol>
-<li>Set up bioconductor/bioconductor_docker:devel on Github resources</li>
-<li>Install package dependencies for your package (based on the <code>DESCRIPTION</code> file)</li>
-<li>Run <code><a href="https://rdrr.io/pkg/rcmdcheck/man/rcmdcheck.html">rcmdcheck::rcmdcheck</a></code>
-</li>
-<li>Build a pkgdown website and push it to github pages</li>
-<li>Build a docker image with the installed package and dependencies</li>
-</ol>
-<div id="responsibilities" class="section level2">
-<h2 class="hasAnchor">
-<a href="#responsibilities" class="anchor"></a>Responsibilities</h2>
-<p>This year, package authors will be primarily responsible for:</p>
-<ol>
-<li>Creating a landing site of their choosing for their workshops (a website). This website should be listed in the <code>DESCRIPTION</code> file as the <code>URL</code>.</li>
-<li>Creating a docker image that will contain workshop materials and the installed packages necessary to run those materials. The name of the resulting docker image, including “tag” if desired, should be listed in a non-standard tag, <code>DockerImage:</code> in the <code>DESCRIPTION</code> file.</li>
-</ol>
-<p>Both of those tasks can be accomplished using the Github actions included in this template package.</p>
-</div>
-<div id="details" class="section level2">
-<h2 class="hasAnchor">
-<a href="#details" class="anchor"></a>Details</h2>
-<p>For detailed instructions, see the <code>How to build a workshop</code> article/vignette.</p>
-</div>
-<div id="results-of-successful-deployment" class="section level2">
-<h2 class="hasAnchor">
-<a href="#results-of-successful-deployment" class="anchor"></a>Results of successful deployment</h2>
+<a href="#embeddings-in-integrative-analysis-of-spatial-omics" class="anchor"></a>Embeddings in Integrative Analysis of Spatial ’omics</h1></div>
+<p>It used to be the case that, to obtain measurements of a biological system, one had to be something of a specialist in the particular sensing technology. Even if a technology produced a very high-dimensional description of a system, you would only typically have one of these types of data to have to analyze at a time.</p>
+<p>Now, in contrast, a broad array of sensing technologies are easily accessible, and it’s not uncommon for a researcher interested in a system to obtain several complementary views using several technologies. This is the starting point for integrative analysis.</p>
+<p>This package describes analysis done for the workshop <a href="https://www.birs.ca/events/2020/5-day-workshops/20w5197">Mathematical Frameworks for Integrative Analysis of Emerging Biological Data Types</a>. The original data and questions are described (<a href="https://github.com/BIRSBiointegration/Hackathon/tree/master/sc-targeted-proteomics" class="uri">https://github.com/BIRSBiointegration/Hackathon/tree/master/sc-targeted-proteomics</a>)[here]. These analysis formed the basis of a short <a href="https://drive.google.com/file/d/1PHaiz7yGJcF8d8Sym0Aj9vN1jo8ltz6g/view?usp=sharing">talk</a>.</p>
+<p>The running theme across the four vignettes included here is that each measurement technology gives a slightly different view of the same overall system. Our goal is to measure the extent to which these different views give redundant vs. orthogonal information. Which combinations of sensing technologies are likely to give the most diverse set of findings, or the strongest evidence for conclusions, about a single underlying system?</p>
+<p>The primary methodological device used across the vignettes is the reduction of raw data into directly inspectable features. These representations are easier to work with than raw pixel values, say, and they facilitate statistical analysis of the relationship between data sources.</p>
+<p>The different vignettes have different emphases,</p>
 <ul>
-<li>A working docker image that contains the installed package and dependencies.</li>
-<li>An up-to-date <code>pkgdown</code> website at <a href="https://YOURUSERNAME.github.io/YOURREPOSITORYNAME/" class="uri">https://YOURUSERNAME.github.io/YOURREPOSITORYNAME/</a>
-</li>
-<li>Docker image will be tagged with <code>latest</code>, <code>sha-XXXXXX</code> where <code>XXXXXX</code> is the hash of the current <code>master</code> commit, and <code>master</code>.</li>
+<li>
+<em>Deriving Graph and Image Features</em> shows how to build meaningful features manually, based on source MIBI-TOF raster data.</li>
+<li>
+<em>Interactive Visualization using Linked Views</em> considers the use of visualization interfaces to streamline inspection of learned cell atlases.</li>
+<li>
+<em>Disentangling Composition and Ecological Effects</em> is focused on the extent to which ecological features of a sample can be recovered from the cells that it contains.</li>
+<li>
+<em>Mapping between Cell-Level Embeddings</em> considers the analogous problem at the cellular level.</li>
 </ul>
 </div>
-<div id="to-use-the-resulting-image" class="section level2">
-<h2 class="hasAnchor">
-<a href="#to-use-the-resulting-image" class="anchor"></a>To use the resulting image:</h2>
-<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">docker</span> run -e PASSWORD=<span class="op">&lt;</span>choose_a_password_for_rstudio<span class="op">&gt;</span> -p 8787:8787 YOURDOCKERIMAGENAME</span></code></pre></div>
-<p>Once running, navigate to <a href="https://localhost:8787/" class="uri">https://localhost:8787/</a> and then login with <code>rstudio</code>:<code>yourchosenpassword</code>.</p>
-<p>To try with <strong>this</strong> repository docker image:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="ex">docker</span> run -e PASSWORD=abc -p 8787:8787 seandavi/buildabiocworkshop2020</span></code></pre></div>
+<div id="running-the-code" class="section level1">
+<h1 class="hasAnchor">
+<a href="#running-the-code" class="anchor"></a>Running the code</h1>
+<p>The goal of packaging these analysis is to make them easy to rerun with minimal effort. You don’t even need to download R – just pull the docker image and enter the vignettes. Specifically, pull and run the docker image using,</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">docker</span> run -e PASSWORD=<span class="op">&lt;</span>make_up_a_password_here<span class="op">&gt;</span> -p 8787:8787 krisrs1128/birs2020_scproteomics_embeddings</span></code></pre></div>
+<p>and then navigate to <a href="localhost:8787">localhost:8787</a> and enter username = rstudio and password = your password. In the console, install all dependencies using <code><a href="https://remotes.r-lib.org/reference/install_deps.html">remotes::install_deps(dependencies = TRUE, repos = BiocManager::repositories())</a></code>. Then, you can then browse to the vignettes folder and run all the analysis on this site.</p>
 </div>
-<div id="whatcha-get" class="section level2">
-<h2 class="hasAnchor">
-<a href="#whatcha-get" class="anchor"></a>Whatcha get</h2>
-<p><a href="https://seandavi.github.io/BuildABiocWorkshop2020" class="uri">https://seandavi.github.io/BuildABiocWorkshop2020</a></p>
-<p><img src="https://github.com/seandavi/BuildABiocWorkshop2020/raw/master/inst/images/dockerhub_result.png" alt="dockerhub"></p>
-</div>
-</div>
+
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
