@@ -95,7 +95,7 @@ polygonize <- function(im) {
 #' @export
 background_prop <- function(x, ...) {
   if (nrow(x) == 0) { # case of no neighbors
-    return (tibble(immuneGroup = NA, props = NA))
+    return (tibble(background = NA, props = NA))
   }
 
   props <- table(x$cellLabelInImage %in% c(0, 1))

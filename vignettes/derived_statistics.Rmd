@@ -38,6 +38,7 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
 ```{r}
+library("SingleCellExperiment")
 library("dplyr")
 library("ggplot2")
 library("igraph")
@@ -45,6 +46,7 @@ library("raster")
 library("readr")
 library("reshape2")
 library("sf")
+library("forcats")
 library("spdep")
 library("stars")
 library("stringr")
@@ -57,13 +59,19 @@ First, we'll download all the data, if they're not already present in the
 samples, so that the vignette can run quickly.
 
 ```{r}
-data_paths <- download_data(file.path(Sys.getenv("HOME"), "Data"))
-sample_id <- params$sample_id
-f <- list.files(data_paths[[3]], str_interp("p${sample_id}_"), full.names = TRUE)
-im <- raster(f)
-im <- crop(im, extent(im, 0, 250, 0, 250)) # comment out to run on full data
+data_dir <- file.path(Sys.getenv("HOME"), "Data")
+data_paths <- download_data(data_dir)
+loaded_ <- load_mibi(data_dir)
+subsample <- spatial_subsample(loaded_$tiffs, loaded_$mibi, 250)
+mibi_sce <- subsample$exper
 
-cell_data <- read_csv(file.path(data_paths[[3]], "cellData.csv")) %>%
+sample_id <- params$sample_id
+im <- subsample$ims[[as.character(sample_id)]]
+
+cell_data <- colData(mibi_sce) %>%
+  as.data.frame() %>%
+  tidyr::unite(scell, SampleID, cellLabelInImage, remove = FALSE) %>%
+  mutate(cell_type = cell_type(mibi_sce),) %>%
   filter(SampleID == sample_id)
 ```
 
@@ -143,8 +151,7 @@ cell_ids <- unique(polys$cellLabelInImage)
 loop_stats(cell_ids[1:10], "raster", im, polys, background_prop)
 ```
 
-Using the same wrapper, we can also compute the cell types that make up each
-cell's neighborhood, reflecting cell-type heterogeneity.
+We can use the same wrapper to study the local cell mixing proportions.
 
 ```{r}
 loop_stats(cell_ids[1:10], "raster", im, polys, type_props)

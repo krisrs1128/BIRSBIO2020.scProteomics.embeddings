@@ -3,7 +3,7 @@ title: "Disentangling Composition and Ecological Effects"
 author: Kris Sankaran^[ksankaran@wisc.edu]
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Disentangling Composition and Spatial Effects}
+  %\VignetteIndexEntry{Disentangling Composition and Ecological Effects}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 params:
