@@ -1,49 +1,57 @@
-# BuildABiocWorkshop2020
+# Embeddings in Integrative Analysis of Spatial 'omics
 
-This package is a template for building a Bioconductor 2020 workshop. The package
-includes Github actions to:
+It used to be the case that, to obtain measurements of a biological system, one
+had to be something of a specialist in the particular sensing technology. Even
+if a technology produced a very high-dimensional description of a system, you
+would only typically have one of these types of data to have to analyze at a
+time.
 
-1. Set up bioconductor/bioconductor_docker:devel on Github resources
-2. Install package dependencies for your package (based on the `DESCRIPTION` file)
-3. Run `rcmdcheck::rcmdcheck`
-4. Build a pkgdown website and push it to github pages
-5. Build a docker image with the installed package and dependencies
+Now, in contrast, a broad array of sensing technologies are easily accessible,
+and it's not uncommon for a researcher interested in a system to obtain several
+complementary views using several technologies. This is the starting point for
+integrative analysis.
 
-## Responsibilities
+This package describes analysis done for the workshop [Mathematical Frameworks
+for Integrative Analysis of Emerging Biological Data
+Types](https://www.birs.ca/events/2020/5-day-workshops/20w5197). The original
+data and questions are described
+(https://github.com/BIRSBiointegration/Hackathon/tree/master/sc-targeted-proteomics)[here].
+These analysis formed the basis of a short
+[talk](https://drive.google.com/file/d/1PHaiz7yGJcF8d8Sym0Aj9vN1jo8ltz6g/view?usp=sharing).
 
-This year, package authors will be primarily responsible for:
+The running theme across the four vignettes included here is that each
+measurement technology gives a slightly different view of the same overall
+system. Our goal is to measure the extent to which these different views give
+redundant vs. orthogonal information. Which combinations of sensing technologies
+are likely to give the most diverse set of findings, or the strongest evidence
+for conclusions, about a single underlying system?
 
-1. Creating a landing site of their choosing for their workshops (a website). This website should be listed in the `DESCRIPTION` file as the `URL`.
-2. Creating a docker image that will contain workshop materials and the installed packages necessary to run those materials. The name of the resulting docker image, including "tag" if desired, should be listed in a non-standard tag, `DockerImage:` in the `DESCRIPTION` file. 
+The primary methodological device used across the vignettes is the reduction of
+raw data into directly inspectable features. These representations are easier to
+work with than raw pixel values, say, and they facilitate statistical analysis
+of the relationship between data sources.
 
-Both of those tasks can be accomplished using the Github actions included in this template package. 
+The different vignettes have different emphases,
+* *Deriving Graph and Image Features* shows how to build meaningful features
+  manually, based on source MIBI-TOF raster data.
+* *Interactive Visualization using Linked Views* considers the use of
+  visualization interfaces to streamline inspection of learned cell atlases.
+* *Disentangling Composition and Ecological Effects* is focused on the extent to
+  which ecological features of a sample can be recovered from the cells that it
+  contains.
+* *Mapping between Cell-Level Embeddings* considers the analogous problem at the
+  cellular level.
 
-## Details
+# Running the code
 
-For detailed instructions, see the `How to build a workshop` article/vignette.
-
-## Results of successful deployment
-
-- A working docker image that contains the installed package and dependencies.
-- An up-to-date `pkgdown` website at https://YOURUSERNAME.github.io/YOURREPOSITORYNAME/
-- Docker image will be tagged with `latest`, `sha-XXXXXX` where `XXXXXX` is the hash of the current `master` commit, and `master`. 
-
-## To use the resulting image:
+The goal of packaging these analysis is to make them easy to rerun with minimal
+effort. You don't even need to download R -- just pull the docker image and
+enter the vignettes. Specifically, pull and run the docker image using,
 
 ```sh
-docker run -e PASSWORD=<choose_a_password_for_rstudio> -p 8787:8787 YOURDOCKERIMAGENAME
-```
-Once running, navigate to https://localhost:8787/ and then login with `rstudio`:`yourchosenpassword`. 
-
-To try with **this** repository docker image:
-
-```sh
-docker run -e PASSWORD=abc -p 8787:8787 seandavi/buildabiocworkshop2020
+docker run -e PASSWORD=<make_up_a_password_here> -p 8787:8787 krisrs1128/birs2020_scproteomics_embeddings
 ```
 
-
-## Whatcha get
-
-https://seandavi.github.io/BuildABiocWorkshop2020
-
-![dockerhub](https://github.com/seandavi/BuildABiocWorkshop2020/raw/master/inst/images/dockerhub_result.png)
+and then navigate to [localhost:8787](localhost:8787) and enter username =
+rstudio and password = your password. You can then browse to the vignettes
+folder and run all associated analysis.

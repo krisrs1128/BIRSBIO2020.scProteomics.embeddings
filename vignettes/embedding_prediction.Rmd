@@ -1,9 +1,9 @@
 ---
-title: "Mapping between Embeddings"
+title: "Mapping between Cell-Level Embeddings"
 author: Kris Sankaran^[ksankaran@wisc.edu]
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Mapping between Embeddings}
+  %\VignetteIndexEntry{Mapping between Cell-Level Embeddings}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 params:
@@ -13,25 +13,31 @@ params:
   max_samples: 10 # number of samples to run on
 ---
 
+In the vignette "Disentangling Composition and Spatial Effects," we ask whether
+it's possible to recover sample-level spatial features from protein expression
+measurements Here, we ask a more challenging question -- is it possible to
+identify spatial features associated with *individual cells*, just from the
+expression measurements As before, our motivation is that characteristics of
+cell ecosystems are interesting, but cheaper, expression-based proxies would be
+practically useful.
 
-* In `composition.rmd` we ask whether it's possible to recover sample-level
-  spatial features from protein expression measurements
-* We ask a more challenging question here, looking for whether it's possible to
-  identify spatial features associated with individual cells, just from the
-  expression measurements 
-* Understandably more far fetched, but there are some reasons it could happen --
-  maybe when an immune cell is surrounded by cancer cells, it has a different
-  protein expression pattern than when it is surrounded by other immune cells
-* Again, motivation is that spatial characteristics of cells are interesting,
-  but it's easier to use technologies that only interrogate expression
-  information
+This is a more far fetched possibility, but there are some reasons it could
+happen. For example, perhaps when an immune cell is surrounded by cancer cells,
+it has a different protein expression profile than when it is surrounded by
+other immune cells
 
-One theme between this vignette and `composition.Rmd` is that the notion of a
-sampling unit is not so straightforwards in this analysis -- we can reasonably
+A theme that unifies the two vignettes is that the notion of "the" sampling unit
+is not so straightforwards when working with spatial data-- we can reasonably
 analyze the data at several levels of resolution. This vignette considers the
-cell-resolution analog of the sample-level questions in that vignette.
+cell-resolution analog of the sample-level questions before.
 
-Without further delay, these are the packages we use in this analysis.
+# Setup
+
+These are the packages used in this analysis.
+
+```{r}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
 
 ```{r}
 library("SummarizedExperiment")
@@ -52,9 +58,9 @@ theme_set(theme_bw() + theme(panel.grid=element_blank()))
 ```
 
 We download the data if it's not already present. We're filtering to just 10
-samples in this run, since it lets the vignette run faster. But to train the
-complete model, replace the `params$max_sample` with 41 (the number of raster
-files we have).
+samples in this run, since we want the vignettes to compile relatively quickly.
+That said, to run the full analysis, replace the `params$max_sample` with 41
+(the number of raster files we have).
 
 ```{r}
 data_dir <- file.path(Sys.getenv("HOME"), "Data")
@@ -73,7 +79,7 @@ mibi_sce <- subsample$exper
 
 Now, let's extract some features on which to perform the joint embedding. We'll
 transform and reweight the columns, to make the two sets of features more
-comparable. First, for transformation, we'll convert antigen expression values
+comparable. First, for transformation, we'll convert protein expression values
 to ranks and then threshold.
 
 ```{r, message=TRUE}
@@ -148,7 +154,7 @@ graph_stats <- bind_rows(graph_stats) %>%
 plot(graph_stats$`Keratin-positive tumor`, graph_stats$`graph_neighbors_Keratin-positive tumor`)
 ```
 
-Now, we'll standardize these features and learn some embeddings.
+Now, we'll standardize these features and learn a set of cell-level embeddings.
 
 ```{r}
 # standardize features between the two tables
@@ -184,7 +190,7 @@ embeddings_df <- embeddings$layout %>%
   left_join(z)
 ```
 
-We'll plot the embeddings we just made, against some of the derived features.
+Next we plot the embeddings we just made, against some of the derived features.
 
 ```{r}
 ggplot(embeddings_df) +
@@ -222,7 +228,7 @@ ggplot(embeddings_df) +
 
 Now that we have embeddings at the cell level, we can try to summarize samples
 by how many of their cells lie in different regions of the embedding space.
-First, we'll cluster using an arbitrary $K$.
+First, we'll cluster using an arbitrary $K = 20$.
 
 ```{r}
 clusters <- kmeans(embeddings$layout, centers = params$cluster_K)
@@ -275,8 +281,8 @@ we had noticed from before? E.g., are those in cluster "5" more spatially
 heterogeneous?
 
 To answer this, let's compare samples 23, 27, 2 with 10 and 12. These samples
-seem to have pretty different cluster compositions, even though they both lie in
-the grade 3 group.
+seem to have somewhat different cluster compositions, even though they all are
+Grade 3..
 
 ```{r}
 polys_q <- polys_df %>%
@@ -289,11 +295,10 @@ ggplot(polys_q) +
   theme(legend.position = "bottom")
 ```
 
-I'm not sure I'd have put 10 and 12 that close to one another, since 10 has lots
-of empty space, but at least the first three do seem qualitatively similar.
-
-In fact, we can compare many of the spatial images, based on the ordering we
-just defined.
+It is somewhat surprising that samples 10 and 12 are placed close to one
+another, since 10 has lots of empty space. However, the first three samples do
+seem qualitatively similar. In fact, we can compare many of the spatial images,
+based on the ordering we just defined.
 
 ```{r}
 cluster_props_wide <- cluster_props %>%
@@ -335,17 +340,17 @@ we could map the cytof data into the mibitof embedding space.
 ```{r}
 load(file.path(data_dir, "masstagSCE.rda"))
 masstag <- data_list("sce")
-common_antigens <- intersect(rownames(masstag$tcell.sce), rownames(mibi_sce))
+common_proteins <- intersect(rownames(masstag$tcell.sce), rownames(mibi_sce))
 ```
 
 I'll learn a mapping at the cell level, using (1) cell identity and (2) levels
-of `r common_antigens` to identify the corresponding location in the embedding
+of `r common_proteins` to identify the corresponding location in the embedding
 space. If this is accurate, we could then cluster the imputed cell embeddings,
 to come up with a new spatial summary of the mass spec data. Otherwise, we would
-report that the antigen information on its own is not enough to determine the
+report that the protein information on its own is not enough to determine the
 spatial characteristics of the sample.
 
-This prepares the training data, which maps antigen values and cell type
+This prepares the training data, which maps protein values and cell type
 indicators to embedding locations.
 
 ```{r}
@@ -362,13 +367,15 @@ response <- embeddings_df %>%
   as.matrix()
 
 pred_mat <- predictors %>%
-  dplyr::select(all_of(common_antigens)) %>%
+  dplyr::select(all_of(common_proteins)) %>%
   as.matrix()
 
 model <- generate_model(ncol(pred_mat))
 model %>%
   fit(pred_mat, response, epochs=200, batch_size=1024)
 ```
+
+Let's study teh quality of the trained approximator.
 
 ```{r}
 y_hat <- predict(model, pred_mat)
@@ -379,14 +386,11 @@ points(y_hat, cex=0.1, col = rgb(1, 0, 0, 0.1))
 What happens when we summarize these samples by these predicted cluster
 memberships? Ideally, you would be able to recognize the original cluster
 compositions, which should reflect spatial expression patterns (if they don't
-already).
-
-In the worst case, the imputed cluster compositions would be totally unrelated
-to the real (known, for the MIBI-ToF data) compositions.
-
+already). In the worst case, the imputed cluster compositions would be totally
+unrelated to the real (known, for the MIBI-ToF data) compositions.
 
 We can compare this with what the predictions would have been if we had used all
-the antigens (but no explicit spatial information).
+the proteins (but no explicit spatial information).
 
 ```{r}
 pred_mat <- predictors %>%
