@@ -191,13 +191,13 @@
 <span class="no">props</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/sample_proportions.html">sample_proportions</a></span>(<span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html">colData</a></span>(<span class="no">mibi_sce</span>)$<span class="no">SampleID</span>, <span class="no">cell_clusters</span>$<span class="no">cluster</span>)
 <span class="no">mprops</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="no">props</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">mprops</span>)</pre></body></html></div>
-<pre><code>##   SampleID cluster        Freq
-## 1        1       1 0.000000000
-## 2        7       1 0.000000000
-## 3        8       1 0.000000000
-## 4        6       1 0.000000000
-## 5        2       1 0.006451613
-## 6       27       1 0.000000000</code></pre>
+<pre><code>##   SampleID cluster       Freq
+## 1        7       1 0.04819277
+## 2        1       1 0.04608295
+## 3        8       1 0.01149425
+## 4        2       1 0.25161290
+## 5        6       1 0.06269592
+## 6       27       1 0.20000000</code></pre>
 <p>Next, we join the cluster information into high-level sample information. <code>cd_samp</code> has <code>colData</code> summarized at the individual patient level, rather than one row for each cell, so it is a dramatic reduction of the original assay.</p>
 <div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">cd</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html">colData</a></span>(<span class="no">mibi_sce</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>() <span class="kw">%&gt;%</span>
@@ -466,12 +466,12 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.6993544  0.6680010  0.5739851
-##   11    0.6651068  0.6212051  0.5535632
-##   20    0.6885590  0.5708437  0.5704487
+##    2    0.6921844  0.6806644  0.5748155
+##   11    0.7030967  0.5703709  0.5857473
+##   20    0.7363269  0.5070248  0.6115206
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
-## The final value used for the model was mtry = 11.</code></pre>
+## The final value used for the model was mtry = 2.</code></pre>
 <div class="sourceCode" id="cb24"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/plot_fits.html">plot_fits</a></span>(<span class="no">x</span>, <span class="no">y</span>, <span class="no">fits</span>$<span class="no">glmnet</span>, <span class="no">fits</span>$<span class="no">rf</span>)</pre></body></html></div>
 <p><img src="composition_files/figure-html/unnamed-chunk-10-2.png" width="700"></p>
 <p>It looks like quite a bit, but not all, of the variation in average entropy, can be explained by cell composition. What about the average neighborhood size or standard errors of entropy and neighborhood size?</p>
@@ -489,12 +489,12 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.7337175  0.5072553  0.5141867
-##   11    0.7318983  0.4890955  0.5170454
-##   20    0.7528761  0.4742060  0.5429041
+##    2    0.6984595  0.5772637  0.5111530
+##   11    0.7255317  0.5030249  0.5244293
+##   20    0.7526370  0.4702853  0.5539058
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
-## The final value used for the model was mtry = 11.</code></pre>
+## The final value used for the model was mtry = 2.</code></pre>
 <div class="sourceCode" id="cb27"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/plot_fits.html">plot_fits</a></span>(<span class="no">x</span>, <span class="no">y</span>, <span class="no">fits</span>$<span class="no">glmnet</span>, <span class="no">fits</span>$<span class="no">rf</span>)</pre></body></html></div>
 <p><img src="composition_files/figure-html/unnamed-chunk-11-2.png" width="700"></p>
 <div class="sourceCode" id="cb28"><html><body><pre class="r"><span class="no">y</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(<span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span>(<span class="no">spatial_comp</span>$<span class="no">sde</span>))
@@ -510,10 +510,10 @@ ggplot(spatial_cell) +
 ## Summary of sample sizes: 40, 40, 40, 40, 40, 40, ... 
 ## Resampling results across tuning parameters:
 ## 
-##   mtry  RMSE       Rsquared   MAE      
-##    2    0.8691189  0.1963332  0.6748485
-##   11    0.9172543  0.1541969  0.7058789
-##   20    0.9458076  0.1336640  0.7286745
+##   mtry  RMSE       Rsquared    MAE      
+##    2    0.8948286  0.12128238  0.7160297
+##   11    0.9402100  0.11110682  0.7383697
+##   20    0.9864336  0.08732524  0.7795593
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
 ## The final value used for the model was mtry = 2.</code></pre>
@@ -533,12 +533,12 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.8899822  0.2597087  0.6791372
-##   11    0.9001288  0.2213376  0.7019025
-##   20    0.9196435  0.2021092  0.7236856
+##    2    0.8276062  0.3408944  0.6091935
+##   11    0.8209679  0.3392014  0.6113122
+##   20    0.8501928  0.3048869  0.6347743
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
-## The final value used for the model was mtry = 2.</code></pre>
+## The final value used for the model was mtry = 11.</code></pre>
 <div class="sourceCode" id="cb33"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/plot_fits.html">plot_fits</a></span>(<span class="no">x</span>, <span class="no">y</span>, <span class="no">fits</span>$<span class="no">glmnet</span>, <span class="no">fits</span>$<span class="no">rf</span>)</pre></body></html></div>
 <p><img src="composition_files/figure-html/unnamed-chunk-11-6.png" width="700"></p>
 <p>It seems like average pairwise distance is predictable, though not quite as much as entropy. The standard errors are not predictable using the linear model, but seem okay using the random forest (which I find an odd result…)</p>
@@ -561,12 +561,12 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.7510425  0.6435214  0.6188193
-##   11    0.7354875  0.5721908  0.6094224
-##   20    0.7612223  0.5098636  0.6242529
+##    2    0.6939938  0.6219349  0.5808349
+##   11    0.7330630  0.4976350  0.6077504
+##   20    0.7753926  0.4374836  0.6381822
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
-## The final value used for the model was mtry = 11.</code></pre>
+## The final value used for the model was mtry = 2.</code></pre>
 <p>First, let’s study the output of the glmnet model. Its out-of-sample performance is lower than the random forest’s, but it is more directly amenable to interpretation.</p>
 <div class="sourceCode" id="cb36"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/plot.html">plot</a></span>(<span class="no">fits</span>$<span class="no">glmnet</span>$<span class="no">glmnet.fit</span>)</pre></body></html></div>
 <p><img src="composition_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
