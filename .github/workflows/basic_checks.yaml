@@ -72,7 +72,6 @@ jobs:
         run: |
           options(repos = c(CRAN = "https://cran.r-project.org"))
           BiocManager::repositories()
-          setwd("/github/home/")
           getwd()
           remotes::install_deps(dependencies = TRUE, repos = BiocManager::repositories())
           remotes::install_cran(c("rcmdcheck", "reticulate", "tensorflow", "keras"))
