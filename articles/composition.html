@@ -191,13 +191,13 @@
 <span class="no">props</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/sample_proportions.html">sample_proportions</a></span>(<span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html">colData</a></span>(<span class="no">mibi_sce</span>)$<span class="no">SampleID</span>, <span class="no">cell_clusters</span>$<span class="no">cluster</span>)
 <span class="no">mprops</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span>(<span class="no">props</span>)
 <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>(<span class="no">mprops</span>)</pre></body></html></div>
-<pre><code>##   SampleID cluster       Freq
-## 1        7       1 0.04819277
-## 2        1       1 0.04608295
-## 3        8       1 0.01149425
-## 4        2       1 0.25161290
-## 5        6       1 0.06269592
-## 6       27       1 0.20000000</code></pre>
+<pre><code>##   SampleID cluster Freq
+## 1       36       1    0
+## 2       41       1    0
+## 3        7       1    0
+## 4        8       1    0
+## 5        2       1    0
+## 6        1       1    0</code></pre>
 <p>Next, we join the cluster information into high-level sample information. <code>cd_samp</code> has <code>colData</code> summarized at the individual patient level, rather than one row for each cell, so it is a dramatic reduction of the original assay.</p>
 <div class="sourceCode" id="cb8"><html><body><pre class="r"><span class="no">cd</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html">colData</a></span>(<span class="no">mibi_sce</span>) <span class="kw">%&gt;%</span>
   <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span>() <span class="kw">%&gt;%</span>
@@ -466,12 +466,12 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.6921844  0.6806644  0.5748155
-##   11    0.7030967  0.5703709  0.5857473
-##   20    0.7363269  0.5070248  0.6115206
+##    2    0.8445855  0.4211231  0.6929522
+##   11    0.8371559  0.3582111  0.6860903
+##   20    0.8513589  0.3172574  0.6978819
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
-## The final value used for the model was mtry = 2.</code></pre>
+## The final value used for the model was mtry = 11.</code></pre>
 <div class="sourceCode" id="cb24"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/plot_fits.html">plot_fits</a></span>(<span class="no">x</span>, <span class="no">y</span>, <span class="no">fits</span>$<span class="no">glmnet</span>, <span class="no">fits</span>$<span class="no">rf</span>)</pre></body></html></div>
 <p><img src="composition_files/figure-html/unnamed-chunk-10-2.png" width="700"></p>
 <p>It looks like quite a bit, but not all, of the variation in average entropy, can be explained by cell composition. What about the average neighborhood size or standard errors of entropy and neighborhood size?</p>
@@ -489,9 +489,9 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.6984595  0.5772637  0.5111530
-##   11    0.7255317  0.5030249  0.5244293
-##   20    0.7526370  0.4702853  0.5539058
+##    2    0.7181931  0.5185441  0.5468819
+##   11    0.7583431  0.4496802  0.5718017
+##   20    0.7636368  0.4483067  0.5806464
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
 ## The final value used for the model was mtry = 2.</code></pre>
@@ -511,9 +511,9 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared    MAE      
-##    2    0.8948286  0.12128238  0.7160297
-##   11    0.9402100  0.11110682  0.7383697
-##   20    0.9864336  0.08732524  0.7795593
+##    2    0.9225396  0.14913197  0.6736208
+##   11    0.9749090  0.10270745  0.7129818
+##   20    1.0149041  0.08109235  0.7459317
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
 ## The final value used for the model was mtry = 2.</code></pre>
@@ -533,12 +533,12 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.8276062  0.3408944  0.6091935
-##   11    0.8209679  0.3392014  0.6113122
-##   20    0.8501928  0.3048869  0.6347743
+##    2    0.8574938  0.2355391  0.6697554
+##   11    0.8706316  0.2081886  0.6773045
+##   20    0.8772459  0.1987382  0.6875780
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
-## The final value used for the model was mtry = 11.</code></pre>
+## The final value used for the model was mtry = 2.</code></pre>
 <div class="sourceCode" id="cb33"><html><body><pre class="r"><span class="fu"><a href="https://seandavi.github.io/sars2pack/reference/plot_fits.html">plot_fits</a></span>(<span class="no">x</span>, <span class="no">y</span>, <span class="no">fits</span>$<span class="no">glmnet</span>, <span class="no">fits</span>$<span class="no">rf</span>)</pre></body></html></div>
 <p><img src="composition_files/figure-html/unnamed-chunk-11-6.png" width="700"></p>
 <p>It seems like average pairwise distance is predictable, though not quite as much as entropy. The standard errors are not predictable using the linear model, but seem okay using the random forest (which I find an odd result…)</p>
@@ -561,9 +561,9 @@ ggplot(spatial_cell) +
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  RMSE       Rsquared   MAE      
-##    2    0.6939938  0.6219349  0.5808349
-##   11    0.7330630  0.4976350  0.6077504
-##   20    0.7753926  0.4374836  0.6381822
+##    2    0.8346768  0.4202125  0.6663531
+##   11    0.8494611  0.3259734  0.6842093
+##   20    0.8863555  0.2678802  0.7158366
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
 ## The final value used for the model was mtry = 2.</code></pre>
