@@ -15,7 +15,7 @@ This package describes analysis done for the workshop [Mathematical Frameworks
 for Integrative Analysis of Emerging Biological Data
 Types](https://www.birs.ca/events/2020/5-day-workshops/20w5197). The original
 data and questions are described
-[https://github.com/BIRSBiointegration/Hackathon/tree/master/sc-targeted-proteomics](here).
+[here](https://github.com/BIRSBiointegration/Hackathon/tree/master/sc-targeted-proteomics).
 These analysis formed the basis of a short
 [talk](https://drive.google.com/file/d/1PHaiz7yGJcF8d8Sym0Aj9vN1jo8ltz6g/view?usp=sharing).
 

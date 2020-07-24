@@ -70,6 +70,8 @@ similar patients were placed closer to one another. For this reason, we postpone
 the problem of studying patients together, and focus on the usability of linking
 when working with one patient at a time.
 
+# Data preparation
+
 The function below encapsulates all preprocessing that has to be performed for a
 single patient. The input are the full protein expression data, paths to all
 spatial Tiffs, and the ID of the patient to display. The output are a data frame
@@ -113,6 +115,8 @@ input_data <- function(cell_full, tiff_paths, sample_id, crop_size=1000, simplif
   list("dimred" = dimred, "polys" = geo_polys)
 }
 ```
+
+# Visualization
 
 Below is the visualization applied to the output of this function. Each pair of
 panels corresponds to the subset of cells from a region of tissue within a
