@@ -1,6 +1,6 @@
 Package: BIRSBIO2020.scProteomics.embeddings
 Title: Targeted Proteomics Embedding Analysis (BIRS 2020)
-Version: 0.1.1
+Version: 0.0.1
 Authors@R: 
     person(given = "Kris",
            family = "Sankaran",
